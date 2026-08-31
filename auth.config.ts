@@ -5,6 +5,8 @@ import type { NextAuthConfig } from 'next-auth'
  * La liste des providers est complétée dans `auth.ts`.
  */
 export const authConfig = {
+  // Self-hébergé (hors Vercel) : on fait confiance au host de la requête.
+  trustHost: true,
   pages: {
     signIn: '/connexion-client',
   },

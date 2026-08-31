@@ -1,8 +1,10 @@
-import { Suspense } from 'react'
 import Link from 'next/link'
 import { Store } from 'lucide-react'
 import { AuthCard } from '@/components/forms/auth-card'
 import { LoginForm } from '@/components/auth/login-form'
+
+// Page de connexion : dynamique (lit ?next=), pas de pré-rendu statique.
+export const dynamic = 'force-dynamic'
 
 export default function ConnexionPage() {
   return (
@@ -31,9 +33,7 @@ export default function ConnexionPage() {
         </>
       }
     >
-      <Suspense fallback={null}>
-        <LoginForm variant="pro" googleEnabled={Boolean(process.env.AUTH_GOOGLE_ID)} />
-      </Suspense>
+      <LoginForm variant="pro" googleEnabled={Boolean(process.env.AUTH_GOOGLE_ID)} />
     </AuthCard>
   )
 }

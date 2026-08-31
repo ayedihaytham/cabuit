@@ -1,7 +1,7 @@
 'use client'
 
 import { FormEvent, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { signIn } from 'next-auth/react'
 import { ArrowRight } from 'lucide-react'
 import { PasswordInput } from '@/components/forms/password-input'
@@ -14,7 +14,6 @@ type LoginFormProps = {
 }
 
 export function LoginForm({ variant, googleEnabled = false }: LoginFormProps) {
-  const router = useRouter()
   const params = useSearchParams()
   const [error, setError] = useState('')
   const [pending, setPending] = useState(false)
@@ -34,14 +33,14 @@ export function LoginForm({ variant, googleEnabled = false }: LoginFormProps) {
       redirect: false,
     })
 
-    setPending(false)
-
     if (!result || result.error) {
+      setPending(false)
       setError('Email ou mot de passe incorrect.')
       return
     }
-    router.push(next)
-    router.refresh()
+
+    // Navigation "dure" : garantit que le middleware relit le cookie de session frais.
+    window.location.assign(next)
   }
 
   return (

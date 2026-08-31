@@ -1,8 +1,9 @@
-import { Suspense } from 'react'
 import Link from 'next/link'
 import { UserRound } from 'lucide-react'
 import { AuthCard } from '@/components/forms/auth-card'
 import { LoginForm } from '@/components/auth/login-form'
+
+export const dynamic = 'force-dynamic'
 
 export default function ConnexionClientPage() {
   return (
@@ -31,9 +32,7 @@ export default function ConnexionClientPage() {
         </>
       }
     >
-      <Suspense fallback={null}>
-        <LoginForm variant="client" googleEnabled={Boolean(process.env.AUTH_GOOGLE_ID)} />
-      </Suspense>
+      <LoginForm variant="client" googleEnabled={Boolean(process.env.AUTH_GOOGLE_ID)} />
     </AuthCard>
   )
 }
