@@ -1,0 +1,127 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display-face);
+  /* Une seule police d'affichage : `font-serif` et `font-display` pointent sur Fraunces. */
+  --font-serif: var(--font-display-face);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ink: var(--ink);
+  --color-terracotta: var(--terracotta);
+  --color-olive: var(--olive);
+  --color-ochre: var(--ochre);
+  --color-sand: var(--sand);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+}
+
+:root {
+  color-scheme: light;
+  --background: oklch(0.965 0.018 82);
+  --foreground: oklch(0.22 0.025 55);
+  --card: oklch(0.99 0.008 82);
+  --card-foreground: oklch(0.22 0.025 55);
+  --popover: oklch(0.99 0.008 82);
+  --popover-foreground: oklch(0.22 0.025 55);
+  --primary: oklch(0.55 0.14 35);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.9 0.04 82);
+  --secondary-foreground: oklch(0.22 0.025 55);
+  --muted: oklch(0.92 0.025 82);
+  --muted-foreground: oklch(0.5 0.03 55);
+  --accent: oklch(0.75 0.13 78);
+  --accent-foreground: oklch(0.22 0.025 55);
+  --border: oklch(0.22 0.025 55 / 14%);
+  --input: oklch(0.22 0.025 55 / 14%);
+  --ring: oklch(0.55 0.14 35);
+  --ink: oklch(0.22 0.025 55);
+  --terracotta: oklch(0.55 0.14 35);
+  --olive: oklch(0.42 0.07 125);
+  --ochre: oklch(0.75 0.13 78);
+  --sand: oklch(0.965 0.018 82);
+  --radius: 0.9rem;
+}
+
+@layer base {
+  * { @apply border-border outline-ring/50; }
+  html { @apply bg-background scroll-smooth; }
+  body { @apply bg-background text-foreground; font-family: var(--font-body), sans-serif; }
+  button, a { -webkit-tap-highlight-color: transparent; }
+}
+
+.font-display { font-family: var(--font-display-face), Georgia, serif; }
+
+/* Label court en majuscules au-dessus des titres de section. */
+.eyebrow {
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.4;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--terracotta);
+}
+
+.field-label {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.5rem;
+  color: var(--foreground);
+  font-size: 0.8125rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+}
+
+.field-input {
+  display: block;
+  min-width: 0;
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 0.85rem;
+  background: var(--background);
+  color: var(--foreground);
+  padding: 0.78rem 0.9rem;
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 450;
+  line-height: 1.45;
+  outline: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+.field-input::placeholder { color: var(--muted-foreground); }
+.field-input:focus { border-color: var(--terracotta); box-shadow: 0 0 0 3px color-mix(in oklch, var(--terracotta) 18%, transparent); }
+.field-input:hover { border-color: color-mix(in oklch, var(--foreground) 28%, transparent); }
+textarea.field-input { min-height: 7rem; resize: vertical; }
+
+@media (max-width: 639px) {
+  .field-input { min-height: 3rem; padding: 0.72rem 0.8rem; }
+  textarea.field-input { min-height: 8rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}
