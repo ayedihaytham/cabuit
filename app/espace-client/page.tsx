@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useRouter } from 'next/navigation'
+import { signOut } from 'next-auth/react'
 import { Bell, Heart, History, LogOut, MapPin, Pencil, UserRound } from 'lucide-react'
 import { Logo } from '@/components/layout/logo'
 
@@ -23,7 +23,6 @@ const PLACES = [
 ]
 
 export default function EspaceClientPage() {
-  const router = useRouter()
   const [active, setActive] = useState<TabId>('favoris')
   const [favorites, setFavorites] = useState(PLACES.map((place) => place.slug))
   const [unread, setUnread] = useState([true, true])
@@ -270,7 +269,7 @@ export default function EspaceClientPage() {
               </dl>
               <button
                 type="button"
-                onClick={() => router.push('/connexion-client')}
+                onClick={() => signOut({ callbackUrl: '/connexion-client' })}
                 className="mt-8 inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-3 text-sm font-bold text-background"
               >
                 <LogOut className="size-4" /> Se déconnecter
