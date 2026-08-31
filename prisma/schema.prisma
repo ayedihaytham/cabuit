@@ -1,0 +1,344 @@
+// Blayes — schéma de base de données
+// Docs : https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ------------------------------------------------------------------
+// Enums
+// ------------------------------------------------------------------
+
+enum Role {
+  CLIENT
+  MERCHANT
+  ADMIN
+}
+
+enum Category {
+  RESTAURANT
+  CAFE
+}
+
+enum BusinessStatus {
+  DRAFT // en cours de création par le commerçant
+  PENDING // soumis, en attente de validation admin
+  ACTIVE // validé, fiche publique
+  SUSPENDED // désactivé (impayé, litige…)
+  REJECTED // refusé par l'admin
+}
+
+enum PlanTier {
+  ESSENTIEL
+  POPULAIRE
+  PREMIUM
+}
+
+enum SubStatus {
+  TRIALING
+  PENDING_PAYMENT
+  ACTIVE
+  PAST_DUE
+  CANCELED
+}
+
+enum PaymentMethod {
+  BANK_TRANSFER
+  CASH
+  E_DINAR
+  CARD
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  REFUNDED
+  FAILED
+}
+
+enum ReviewStatus {
+  PENDING
+  PUBLISHED
+  REJECTED
+}
+
+enum EventType {
+  SEARCH
+  BUSINESS_VIEW
+  CONTACT_CLICK
+  FAVORITE_ADD
+  SIGNUP
+}
+
+enum ReportStatus {
+  OPEN
+  RESOLVED
+  DISMISSED
+}
+
+// ------------------------------------------------------------------
+// Auth.js (NextAuth v5) + utilisateur
+// ------------------------------------------------------------------
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  passwordHash  String? // null pour les comptes créés via Google
+  role          Role      @default(CLIENT)
+  phone         String?
+  city          String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts       Account[]
+  sessions       Session[]
+  businesses     Business[]      @relation("BusinessOwner")
+  reviews        Review[]
+  favorites      Favorite[]
+  events         Event[]
+  auditLogs      AuditLog[]      @relation("AuditActor")
+  reportsMade    Report[]        @relation("ReportReporter")
+  reportsClosed  Report[]        @relation("ReportResolver")
+  paymentsLogged Payment[]       @relation("PaymentRecordedBy")
+}
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+}
+
+model Session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ------------------------------------------------------------------
+// Commerces
+// ------------------------------------------------------------------
+
+model Business {
+  id          String         @id @default(cuid())
+  ownerId     String
+  owner       User           @relation("BusinessOwner", fields: [ownerId], references: [id])
+  name        String
+  slug        String         @unique
+  category    Category
+  type        String // libellé libre : "Cuisine tunisienne", "Salon de thé"…
+  address     String
+  city        String
+  lat         Float?
+  lng         Float?
+  description String
+  phone       String?
+  whatsapp    String?
+  instagram   String?
+  status      BusinessStatus @default(DRAFT)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  photos        BusinessPhoto[]
+  menuSections  MenuSection[]
+  subscription  Subscription?
+  reviews       Review[]
+  favorites     Favorite[]
+  events        Event[]
+  reports       Report[]
+  sponsoredDays SponsoredBooking[]
+
+  @@index([status, category])
+  @@index([city])
+}
+
+model BusinessPhoto {
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  url        String
+  position   Int      @default(0)
+  createdAt  DateTime @default(now())
+}
+
+model MenuSection {
+  id         String     @id @default(cuid())
+  businessId String
+  business   Business    @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  title      String
+  position   Int         @default(0)
+  items      MenuItem[]
+}
+
+model MenuItem {
+  id          String      @id @default(cuid())
+  sectionId   String
+  section     MenuSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  name        String
+  description String
+  price       String // conserve le format d'affichage ("28 DT")
+  position    Int         @default(0)
+}
+
+// ------------------------------------------------------------------
+// Abonnements & paiements (cycle annuel, règlement manuel au départ)
+// ------------------------------------------------------------------
+
+model Subscription {
+  id               String    @id @default(cuid())
+  businessId       String    @unique
+  business         Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  tier             PlanTier
+  status           SubStatus @default(TRIALING)
+  pricePerYear     Int // en dinars
+  startedAt        DateTime  @default(now())
+  trialEndsAt      DateTime?
+  currentPeriodEnd DateTime?
+  canceledAt       DateTime?
+
+  // Acceptation électronique des Conditions Générales d'Abonnement
+  acceptedTermsAt DateTime
+  acceptedTermsIp String
+  contractVersion String   @default("v1")
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  payments  Payment[]
+}
+
+model Payment {
+  id             String        @id @default(cuid())
+  subscriptionId String
+  subscription   Subscription  @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  amount         Int // en dinars
+  method         PaymentMethod
+  status         PaymentStatus @default(PENDING)
+  reference      String? // n° virement / réf transaction
+  invoiceNumber  String?       @unique
+  paidAt         DateTime?
+  note           String?
+  recordedById   String? // admin qui a pointé le paiement
+  recordedBy     User?         @relation("PaymentRecordedBy", fields: [recordedById], references: [id])
+  createdAt      DateTime      @default(now())
+}
+
+// ------------------------------------------------------------------
+// Avis, favoris
+// ------------------------------------------------------------------
+
+model Review {
+  id            String       @id @default(cuid())
+  businessId    String
+  business      Business     @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  authorId      String
+  author        User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  rating        Int // 1..5
+  text          String
+  status        ReviewStatus @default(PENDING)
+  ownerReply    String?
+  ownerRepliedAt DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@unique([businessId, authorId])
+  @@index([businessId, status])
+}
+
+model Favorite {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, businessId])
+}
+
+// ------------------------------------------------------------------
+// Analytics (argument de confiance côté commerçant) + modération
+// ------------------------------------------------------------------
+
+model Event {
+  id         String    @id @default(cuid())
+  type       EventType
+  userId     String?
+  user       User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  businessId String?
+  business   Business? @relation(fields: [businessId], references: [id], onDelete: SetNull)
+  query      String?
+  city       String?
+  path       String?
+  createdAt  DateTime  @default(now())
+
+  @@index([type, createdAt])
+  @@index([businessId, createdAt])
+}
+
+model Report {
+  id           String       @id @default(cuid())
+  businessId   String
+  business     Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  reporterId   String?
+  reporter     User?         @relation("ReportReporter", fields: [reporterId], references: [id], onDelete: SetNull)
+  reason       String
+  detail       String?
+  status       ReportStatus  @default(OPEN)
+  resolvedById String?
+  resolvedBy   User?         @relation("ReportResolver", fields: [resolvedById], references: [id], onDelete: SetNull)
+  resolvedAt   DateTime?
+  createdAt    DateTime      @default(now())
+}
+
+model SponsoredBooking {
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  startDate  DateTime
+  endDate    DateTime
+  days       Int
+  amount     Int
+  status     String   @default("PENDING")
+  createdAt  DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorId   String
+  actor     User     @relation("AuditActor", fields: [actorId], references: [id])
+  action    String // "business.approve", "payment.mark_paid"…
+  entity    String // "Business", "Payment"…
+  entityId  String
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  @@index([entity, entityId])
+}
