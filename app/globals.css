@@ -66,8 +66,31 @@
 @layer base {
   * { @apply border-border outline-ring/50; }
   html { @apply bg-background scroll-smooth; }
-  body { @apply bg-background text-foreground; font-family: var(--font-body), sans-serif; }
+  body { @apply bg-background text-foreground; font-family: var(--font-body), sans-serif; overflow-x: hidden; }
   button, a { -webkit-tap-highlight-color: transparent; }
+
+  /* Scrollbars discrètes, aux couleurs de la marque */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklch, var(--ink) 22%, transparent) transparent;
+  }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: color-mix(in oklch, var(--ink) 22%, transparent);
+    border-radius: 999px;
+    border: 3px solid transparent;
+    background-clip: content-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in oklch, var(--ink) 38%, transparent);
+    background-clip: content-box;
+  }
+  ::-webkit-scrollbar-corner { background: transparent; }
+
+  /* Conteneurs à défilement horizontal : masquer la barre (le contenu scrolle quand même) */
+  .no-scrollbar { scrollbar-width: none; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
 }
 
 .font-display { font-family: var(--font-display-face), Georgia, serif; }

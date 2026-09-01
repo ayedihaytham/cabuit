@@ -2,7 +2,10 @@
 // Docs : https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  // Charge les relations imbriquées en 1 seule requête SQL (LATERAL JOIN)
+  // au lieu de N requêtes séquentielles -> essentiel avec une base distante.
+  previewFeatures = ["relationJoins"]
 }
 
 datasource db {

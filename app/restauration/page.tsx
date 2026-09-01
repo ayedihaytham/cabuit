@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     'Les restaurants tunisiens sélectionnés par Blayes pour leur goût, leur accueil et ce petit quelque chose qui donne envie de revenir.',
 }
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 300
 
 export default async function RestaurationPage() {
   const rows = await listActiveBusinesses({ category: 'RESTAURANT' })

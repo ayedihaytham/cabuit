@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { db } from '@/lib/db'
-import { requireUser, getCurrentUser } from '@/lib/session'
+import { requireUser, getSessionUser } from '@/lib/session'
 
 // ------------------------------------------------------------------
 // Favoris (client)
@@ -31,7 +31,7 @@ export async function toggleFavorite(businessId: string) {
 // ------------------------------------------------------------------
 
 export async function logContactClick(businessId: string) {
-  const user = await getCurrentUser()
+  const user = await getSessionUser()
   await db.event
     .create({ data: { type: 'CONTACT_CLICK', businessId, userId: user?.id ?? null } })
     .catch(() => {})
@@ -146,7 +146,7 @@ export async function submitReport(
   _prev: ReportState,
   formData: FormData,
 ): Promise<ReportState> {
-  const user = await getCurrentUser()
+  const user = await getSessionUser()
   const reason = String(formData.get('reason') ?? '').trim()
   const detail = String(formData.get('detail') ?? '').trim()
   if (reason.length < 3) return { error: 'Précisez le motif.' }

@@ -10,7 +10,7 @@ import { ReviewFormDb } from '@/components/business/review-form-db'
 import { ReportButton } from '@/components/business/report-button'
 import { ContactLink } from '@/components/business/contact-link'
 import { getPublicBusiness } from '@/lib/queries'
-import { getCurrentUser } from '@/lib/session'
+import { getSessionUser } from '@/lib/session'
 import { db } from '@/lib/db'
 import { CATEGORY_LABELS } from '@/lib/status'
 
@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function CommercePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const [business, user] = await Promise.all([getPublicBusiness(slug), getCurrentUser()])
+  const [business, user] = await Promise.all([getPublicBusiness(slug), getSessionUser()])
   if (!business) notFound()
 
   db.event

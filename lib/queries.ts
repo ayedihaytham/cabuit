@@ -34,6 +34,7 @@ export async function listActiveBusinesses(options: {
 export async function getPublicBusiness(slug: string) {
   return db.business.findFirst({
     where: { slug, status: 'ACTIVE' },
+    relationLoadStrategy: 'join',
     include: {
       photos: { orderBy: { position: 'asc' } },
       menuSections: { orderBy: { position: 'asc' }, include: { items: { orderBy: { position: 'asc' } } } },
@@ -64,6 +65,7 @@ export async function getMerchantBusinesses(ownerId: string) {
 export async function getOwnedBusiness(id: string, ownerId: string) {
   return db.business.findFirst({
     where: { id, ownerId },
+    relationLoadStrategy: 'join',
     include: {
       subscription: true,
       photos: { orderBy: { position: 'asc' } },
@@ -92,7 +94,8 @@ export async function getBusinessStats(businessId: string) {
 // ------------------------------------------------------------------
 
 export async function getClientDashboard(userId: string) {
-  const [favorites, viewed, recommended] = await Promise.all([
+  const [me, favorites, viewed, recommended] = await Promise.all([
+    db.user.findUnique({ where: { id: userId }, select: { createdAt: true } }),
     db.favorite.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
@@ -112,7 +115,7 @@ export async function getClientDashboard(userId: string) {
       include: { photos: { take: 1, orderBy: { position: 'asc' } } },
     }),
   ])
-  return { favorites, viewed, recommended }
+  return { memberSince: me?.createdAt ?? new Date(), favorites, viewed, recommended }
 }
 
 // ------------------------------------------------------------------
@@ -174,6 +177,7 @@ export async function listBusinessesForAdmin(status?: BusinessStatus) {
 export async function getBusinessForAdmin(id: string) {
   return db.business.findUnique({
     where: { id },
+    relationLoadStrategy: 'join',
     include: {
       owner: { select: { name: true, email: true, phone: true } },
       subscription: { include: { payments: { orderBy: { createdAt: 'desc' } } } },

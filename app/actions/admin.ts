@@ -45,6 +45,7 @@ export async function moderateBusiness(businessId: string, action: keyof typeof 
 
   revalidatePath('/admin')
   revalidatePath(`/admin/commerces/${businessId}`)
+  revalidatePath('/')
   revalidatePath('/recherche')
   revalidatePath('/restauration')
   return { ok: true, status: nextStatus }

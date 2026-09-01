@@ -25,7 +25,7 @@ export default async function EspaceClientPage({
   const { tab } = await searchParams
   const active = TABS.find((t) => t.key === tab)?.key ?? 'favoris'
 
-  const { favorites, viewed, recommended } = await getClientDashboard(user.id)
+  const { memberSince, favorites, viewed, recommended } = await getClientDashboard(user.id)
   const favIds = new Set(favorites.map((f) => f.businessId))
   const allActive = active === 'decouvrir' ? await listActiveBusinesses() : []
 
@@ -159,7 +159,7 @@ export default async function EspaceClientPage({
                 <div>
                   <dt className="text-muted-foreground">Membre depuis</dt>
                   <dd className="font-semibold">
-                    {new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' }).format(user.createdAt)}
+                    {new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' }).format(memberSince)}
                   </dd>
                 </div>
               </dl>

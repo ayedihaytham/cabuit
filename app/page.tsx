@@ -24,7 +24,7 @@ const categories = [
   },
 ]
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 300
 
 export default async function HomePage() {
   const selection = (await listActiveBusinesses()).slice(0, 8).map(toUiBusiness)
