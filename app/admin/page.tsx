@@ -1,6 +1,8 @@
 import Link from 'next/link'
-import { Users, Store, TrendingUp, Clock, Star, Flag, ScrollText, Ticket } from 'lucide-react'
-import { AppHeader } from '@/components/dashboard/app-header'
+import { Users, Store, TrendingUp, Clock, Star, Flag, Ticket } from 'lucide-react'
+import { AppShell } from '@/components/app/app-shell'
+import { PageHead } from '@/components/app/ui'
+import { adminNav } from '@/lib/nav'
 import { ModerationActions } from '@/components/admin/moderation-actions'
 import { ReviewModeration, ReportActions } from '@/components/admin/simple-actions'
 import { requireUser } from '@/lib/session'
@@ -15,15 +17,14 @@ import { BUSINESS_STATUS_LABELS, CATEGORY_LABELS } from '@/lib/status'
 
 export const dynamic = 'force-dynamic'
 
-const TABS = [
-  { key: 'pending', label: 'En attente' },
-  { key: 'active', label: 'En ligne' },
-  { key: 'all', label: 'Tous' },
-  { key: 'clients', label: 'Clients' },
-  { key: 'reviews', label: 'Avis' },
-  { key: 'reports', label: 'Signalements' },
-] as const
-type TabKey = (typeof TABS)[number]['key']
+type TabKey = 'overview' | 'all' | 'clients' | 'reviews' | 'reports'
+const TAB_TITLES: Record<TabKey, string> = {
+  overview: 'À valider',
+  all: 'Tous les commerces',
+  clients: 'Clients inscrits',
+  reviews: 'Avis à modérer',
+  reports: 'Signalements',
+}
 
 export default async function AdminPage({
   searchParams,
@@ -32,73 +33,47 @@ export default async function AdminPage({
 }) {
   const user = await requireUser(['ADMIN'])
   const { tab } = await searchParams
-  const active: TabKey = (TABS.find((t) => t.key === tab)?.key ?? 'pending') as TabKey
+  const active: TabKey = (['all', 'clients', 'reviews', 'reports'].includes(tab ?? '')
+    ? tab
+    : 'overview') as TabKey
 
   const stats = await getAdminStats()
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <AppHeader label="Administration" userName={user.name ?? user.email} homeHref="/admin" />
+    <AppShell
+      roleLabel="Administration"
+      userName={user.name ?? user.email}
+      homeHref="/admin"
+      nav={adminNav({ reviews: stats.reviewsPending, reports: stats.reportsOpen })}
+      activeKey={active === 'overview' ? 'overview' : active}
+    >
+      <PageHead eyebrow="Supervision de la plateforme" title="Console admin" />
 
-      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-8 sm:py-12">
-        <p className="eyebrow">Supervision de la plateforme</p>
-        <h1 className="mt-2 font-display text-4xl">Console admin</h1>
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <Stat icon={Users} label="Clients inscrits" value={stats.clients} hint={`${stats.merchants} commerçants`} />
+        <Stat icon={Store} label="Commerces en ligne" value={stats.businesses.active} hint={`${stats.businesses.total} au total`} />
+        <Stat icon={TrendingUp} label="Revenu annuel récurrent" value={`${stats.arr} DT`} hint={`${stats.revenuePaid} DT encaissés`} />
+        <Stat icon={Ticket} label="Bons plans utilisés (30 j)" value={stats.redemptions30d} hint={`${stats.offersActive} actifs`} />
+        <Stat icon={Clock} label="En attente de validation" value={stats.businesses.pending} hint={`${stats.businesses.suspended} suspendus`} />
+        <Stat icon={Star} label="Avis à modérer" value={stats.reviewsPending} />
+        <Stat icon={Flag} label="Signalements ouverts" value={stats.reportsOpen} />
+      </div>
 
-        {/* Statistiques */}
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Stat icon={Users} label="Clients inscrits" value={stats.clients} hint={`${stats.merchants} commerçants · ${stats.admins} admins`} />
-          <Stat icon={Store} label="Commerces en ligne" value={stats.businesses.active} hint={`${stats.businesses.total} au total`} />
-          <Stat icon={Clock} label="En attente de validation" value={stats.businesses.pending} hint={`${stats.businesses.suspended} suspendus`} />
-          <Stat icon={TrendingUp} label="Revenu annuel récurrent" value={`${stats.arr} DT`} hint={`${stats.revenuePaid} DT encaissés`} />
-        </div>
-        <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Stat
-            icon={Ticket}
-            label="Bons plans utilisés (30 j)"
-            value={stats.redemptions30d}
-            hint={`${stats.offersActive} bons plans actifs`}
-          />
-          <Stat icon={Star} label="Avis à modérer" value={stats.reviewsPending} />
-          <Stat icon={Flag} label="Signalements ouverts" value={stats.reportsOpen} />
-          <Link
-            href="/admin/journal"
-            className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 transition hover:border-terracotta"
-          >
-            <span className="text-sm font-semibold">Journal d’activité</span>
-            <ScrollText className="size-4 text-terracotta" />
-          </Link>
-        </div>
-
-        {/* Onglets */}
-        <nav className="mt-10 flex flex-wrap gap-2 border-b border-border">
-          {TABS.map((t) => (
-            <Link
-              key={t.key}
-              href={`/admin?tab=${t.key}`}
-              className={`rounded-t-lg px-4 py-2.5 text-sm font-semibold transition ${
-                active === t.key
-                  ? 'border-b-2 border-terracotta text-terracotta'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              {t.label}
-            </Link>
-          ))}
-        </nav>
-
-        <div className="mt-6">
-          {active === 'clients' ? (
-            <ClientsTable />
-          ) : active === 'reviews' ? (
-            <ReviewsTable />
-          ) : active === 'reports' ? (
-            <ReportsTable />
-          ) : (
-            <BusinessTable tab={active} />
-          )}
-        </div>
-      </main>
-    </div>
+      <h2 className="mt-10 font-display text-2xl font-bold">{TAB_TITLES[active]}</h2>
+      <div className="mt-4">
+        {active === 'clients' ? (
+          <ClientsTable />
+        ) : active === 'reviews' ? (
+          <ReviewsTable />
+        ) : active === 'reports' ? (
+          <ReportsTable />
+        ) : active === 'all' ? (
+          <BusinessTable tab="all" />
+        ) : (
+          <BusinessTable tab="pending" />
+        )}
+      </div>
+    </AppShell>
   )
 }
 
@@ -127,9 +102,8 @@ function Stat({
   )
 }
 
-async function BusinessTable({ tab }: { tab: TabKey }) {
-  const status = tab === 'pending' ? 'PENDING' : tab === 'active' ? 'ACTIVE' : undefined
-  const businesses = await listBusinessesForAdmin(status)
+async function BusinessTable({ tab }: { tab: 'pending' | 'all' }) {
+  const businesses = await listBusinessesForAdmin(tab === 'pending' ? 'PENDING' : undefined)
 
   if (businesses.length === 0) {
     return <p className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">Rien ici pour le moment.</p>

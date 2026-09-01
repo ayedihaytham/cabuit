@@ -1,7 +1,8 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ArrowLeft, ExternalLink, Eye, Phone, Star } from 'lucide-react'
-import { AppHeader } from '@/components/dashboard/app-header'
+import { AppShell } from '@/components/app/app-shell'
+import { MERCHANT_NAV } from '@/lib/nav'
 import { BusinessForm } from '@/components/dashboard/business-form'
 import { SubmitForReview } from '@/components/dashboard/submit-for-review'
 import { MenuEditor } from '@/components/dashboard/menu-editor'
@@ -34,15 +35,14 @@ export default async function ManageBusinessPage({
   const stats = await getBusinessStats(business.id)
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <AppHeader
-        label="Espace commerçant"
-        userName={user.name ?? user.email}
-        homeHref="/dashboard"
-        backHref={{ href: '/dashboard', label: '← Tableau de bord' }}
-      />
-
-      <main className="mx-auto max-w-3xl px-4 py-8 sm:px-8 sm:py-12">
+    <AppShell
+      roleLabel="Espace commerçant"
+      userName={user.name ?? user.email}
+      homeHref="/dashboard"
+      nav={MERCHANT_NAV}
+      activeKey="etablissements"
+    >
+      <div className="mx-auto max-w-3xl">
         <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-terracotta">
           <ArrowLeft className="size-4" /> Retour
         </Link>
@@ -173,8 +173,8 @@ export default async function ManageBusinessPage({
             </section>
           </>
         )}
-      </main>
-    </div>
+      </div>
+    </AppShell>
   )
 }
 

@@ -1,11 +1,12 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ArrowLeft, ExternalLink, Mail, Phone } from 'lucide-react'
-import { AppHeader } from '@/components/dashboard/app-header'
+import { AppShell } from '@/components/app/app-shell'
+import { adminNav } from '@/lib/nav'
 import { ModerationActions } from '@/components/admin/moderation-actions'
 import { RecordPayment } from '@/components/admin/record-payment'
 import { requireUser } from '@/lib/session'
-import { getBusinessForAdmin } from '@/lib/queries'
+import { getAdminStats, getBusinessForAdmin } from '@/lib/queries'
 import { BUSINESS_STATUS_LABELS, SUB_STATUS_LABELS, CATEGORY_LABELS } from '@/lib/status'
 
 export const dynamic = 'force-dynamic'
@@ -15,7 +16,7 @@ const fmtDate = (d: Date) => new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long
 export default async function AdminBusinessPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requireUser(['ADMIN'])
   const { id } = await params
-  const b = await getBusinessForAdmin(id)
+  const [b, stats] = await Promise.all([getBusinessForAdmin(id), getAdminStats()])
   if (!b) notFound()
 
   const status = BUSINESS_STATUS_LABELS[b.status]
@@ -29,15 +30,14 @@ export default async function AdminBusinessPage({ params }: { params: Promise<{ 
           : (['approve', 'reject'] as const)
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <AppHeader
-        label="Administration"
-        userName={user.name ?? user.email}
-        homeHref="/admin"
-        backHref={{ href: '/admin', label: '← Console' }}
-      />
-
-      <main className="mx-auto max-w-4xl px-4 py-8 sm:px-8 sm:py-12">
+    <AppShell
+      roleLabel="Administration"
+      userName={user.name ?? user.email}
+      homeHref="/admin"
+      nav={adminNav({ reviews: stats.reviewsPending, reports: stats.reportsOpen })}
+      activeKey="all"
+    >
+      <div className="mx-auto max-w-4xl">
         <Link href="/admin" className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-terracotta">
           <ArrowLeft className="size-4" /> Console admin
         </Link>
@@ -140,8 +140,8 @@ export default async function AdminBusinessPage({ params }: { params: Promise<{ 
             )}
           </section>
         </div>
-      </main>
-    </div>
+      </div>
+    </AppShell>
   )
 }
 

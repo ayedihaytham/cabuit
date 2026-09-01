@@ -1,9 +1,9 @@
-import type { ReactNode } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowRight, Heart, History, MapPin, Sparkles, Ticket } from 'lucide-react'
-import { ClientTopbar } from '@/components/client/client-topbar'
-import { ClientNav } from '@/components/client/client-nav'
+import { ArrowRight, Heart, History, LayoutGrid, MapPin, Sparkles, Ticket, UserRound } from 'lucide-react'
+import { AppShell, type NavItem } from '@/components/app/app-shell'
+import { PageHead, EmptyState } from '@/components/app/ui'
+import { MemberCard } from '@/components/client/member-card'
 import { FavoriteToggleDb } from '@/components/business/favorite-toggle-db'
 import { ClaimOffer } from '@/components/business/claim-offer'
 import { OfferCard } from '@/components/offers/offer-card'
@@ -19,7 +19,7 @@ import { CATEGORY_LABELS } from '@/lib/status'
 
 export const dynamic = 'force-dynamic'
 
-const TAB_KEYS = ['bons-plans', 'mes-bons-plans', 'favoris', 'decouvrir', 'historique', 'profil'] as const
+const TABS = ['bons-plans', 'mes-bons-plans', 'favoris', 'decouvrir', 'historique', 'profil'] as const
 
 export default async function EspaceClientPage({
   searchParams,
@@ -28,56 +28,47 @@ export default async function EspaceClientPage({
 }) {
   const user = await requireUser(['CLIENT'])
   const { tab } = await searchParams
-  const active = (TAB_KEYS as readonly string[]).includes(tab ?? '') ? (tab as string) : 'bons-plans'
+  const active = (TABS as readonly string[]).includes(tab ?? '') ? (tab as string) : 'bons-plans'
   const displayName = user.name ?? user.email.split('@')[0]
 
   const { memberSince, counts } = await getClientCounts(user.id)
 
+  const nav: NavItem[] = [
+    { key: 'bons-plans', label: 'Bons plans', href: '/espace-client?tab=bons-plans', icon: Ticket, badge: counts.offers },
+    { key: 'mes-bons-plans', label: 'Mes bons plans', href: '/espace-client?tab=mes-bons-plans', icon: Sparkles, badge: counts.redemptions },
+    { key: 'favoris', label: 'Mes favoris', href: '/espace-client?tab=favoris', icon: Heart, badge: counts.favorites },
+    { key: 'decouvrir', label: 'Découvrir', href: '/espace-client?tab=decouvrir', icon: LayoutGrid },
+    { key: 'historique', label: 'Historique', href: '/espace-client?tab=historique', icon: History },
+    { key: 'profil', label: 'Profil', href: '/espace-client?tab=profil', icon: UserRound },
+  ]
+
   return (
-    <div className="min-h-screen bg-[oklch(0.97_0.014_82)] text-foreground">
-      <ClientTopbar name={displayName} />
-
-      <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-6 md:flex-row md:px-8 md:py-10">
-        <ClientNav active={active} name={displayName} memberSince={memberSince} counts={counts} />
-
-        <section className="min-w-0 flex-1">
-          {active === 'bons-plans' && <OffersTab userId={user.id} firstName={displayName} />}
-          {active === 'mes-bons-plans' && <MyOffersTab userId={user.id} />}
-          {active === 'favoris' && <FavorisTab userId={user.id} />}
-          {active === 'decouvrir' && <DecouvrirTab userId={user.id} />}
-          {active === 'historique' && <HistoriqueTab userId={user.id} />}
-          {active === 'profil' && <ProfilTab userId={user.id} name={user.name} email={user.email} />}
-        </section>
-      </div>
-    </div>
+    <AppShell
+      roleLabel="Espace membre"
+      userName={displayName}
+      homeHref="/"
+      nav={nav}
+      activeKey={active}
+      sidebarHeader={
+        <MemberCard
+          name={displayName}
+          memberSince={memberSince}
+          redemptions={counts.redemptions}
+          favorites={counts.favorites}
+        />
+      }
+    >
+      {active === 'bons-plans' && <OffersTab userId={user.id} firstName={displayName} />}
+      {active === 'mes-bons-plans' && <MyOffersTab userId={user.id} />}
+      {active === 'favoris' && <FavorisTab userId={user.id} />}
+      {active === 'decouvrir' && <DecouvrirTab userId={user.id} />}
+      {active === 'historique' && <HistoriqueTab userId={user.id} />}
+      {active === 'profil' && <ProfilTab userId={user.id} name={user.name} email={user.email} />}
+    </AppShell>
   )
 }
 
-/* ---------- Hero + empty state ---------- */
-
-function Hero({ eyebrow, title, subtitle }: { eyebrow: string; title: ReactNode; subtitle?: string }) {
-  return (
-    <div className="mb-7">
-      <p className="eyebrow">{eyebrow}</p>
-      <h1 className="mt-2 font-display text-3xl font-bold sm:text-4xl">{title}</h1>
-      {subtitle && <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">{subtitle}</p>}
-    </div>
-  )
-}
-
-function Empty({ icon: Icon, text, cta }: { icon: typeof Ticket; text: string; cta?: ReactNode }) {
-  return (
-    <div className="rounded-3xl border border-dashed border-border bg-card/60 px-6 py-14 text-center">
-      <span className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-terracotta/10 text-terracotta">
-        <Icon className="size-6" />
-      </span>
-      <p className="mx-auto mt-4 max-w-sm text-sm text-muted-foreground">{text}</p>
-      {cta && <div className="mt-5">{cta}</div>}
-    </div>
-  )
-}
-
-/* ---------- Bons plans ---------- */
+/* ---------- Onglets ---------- */
 
 async function OffersTab({ userId, firstName }: { userId: string; firstName: string }) {
   const [offers, redemptions] = await Promise.all([listActiveOffers(), getClientRedemptions(userId)])
@@ -85,15 +76,18 @@ async function OffersTab({ userId, firstName }: { userId: string; firstName: str
 
   return (
     <>
-      <Hero
+      <PageHead
         eyebrow={`Bonjour ${firstName}`}
-        title={<>Les bons plans du moment.</>}
+        title="Les bons plans du moment."
         subtitle="Récupère le bon plan, présente ton code au comptoir. Réservé aux membres Blayes."
       />
       {offers.length === 0 ? (
-        <Empty icon={Ticket} text="Aucun bon plan actif pour l’instant. Reviens vite, les commerces en publient chaque semaine." />
+        <EmptyState
+          icon={Ticket}
+          text="Aucun bon plan actif pour l’instant. Reviens vite, les commerces en publient chaque semaine."
+        />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {offers.map((o) => (
             <OfferCard
               key={o.id}
@@ -118,36 +112,43 @@ async function MyOffersTab({ userId }: { userId: string }) {
   const redemptions = await getClientRedemptions(userId)
   return (
     <>
-      <Hero eyebrow="Tes codes" title="Mes bons plans" subtitle="À présenter au comptoir de l’établissement." />
+      <PageHead eyebrow="Tes codes" title="Mes bons plans" subtitle="À présenter au comptoir de l’établissement." />
       {redemptions.length === 0 ? (
-        <Empty
+        <EmptyState
           icon={Sparkles}
           text="Tu n’as pas encore récupéré de bon plan."
           cta={
-            <Link href="/espace-client?tab=bons-plans" className="inline-flex items-center gap-2 rounded-full bg-terracotta px-5 py-2.5 text-sm font-bold text-primary-foreground">
+            <Link
+              href="/espace-client?tab=bons-plans"
+              className="inline-flex items-center gap-2 rounded-full bg-terracotta px-5 py-2.5 text-sm font-bold text-primary-foreground"
+            >
               Voir les bons plans <ArrowRight className="size-4" />
             </Link>
           }
         />
       ) : (
-        <div className="space-y-3">
+        <div className="grid gap-4 md:grid-cols-2">
           {redemptions.map((r) => (
             <div
               key={r.id}
-              className={`flex flex-wrap items-center justify-between gap-4 rounded-2xl border bg-card p-4 ${
+              className={`flex items-center justify-between gap-4 rounded-3xl border bg-card p-5 ${
                 r.usedAt ? 'border-border opacity-60' : 'border-terracotta/25'
               }`}
             >
               <div className="min-w-0">
-                <Link href={`/commerce/${r.offer.business.slug}`} className="font-display text-lg font-bold hover:text-terracotta">
+                <Link
+                  href={`/commerce/${r.offer.business.slug}`}
+                  className="font-display text-lg font-bold hover:text-terracotta"
+                >
                   {r.offer.business.name}
                 </Link>
                 <p className="text-sm text-muted-foreground">
-                  {r.offer.title} · <span className="font-semibold text-terracotta">{r.offer.discountLabel}</span>
+                  {r.offer.title} ·{' '}
+                  <span className="font-semibold text-terracotta">{r.offer.discountLabel}</span>
                 </p>
               </div>
               <div className="text-right">
-                <p className="rounded-xl border border-dashed border-terracotta/40 bg-terracotta/[0.06] px-3 py-1.5 font-mono text-xl font-bold tracking-[0.28em] text-foreground">
+                <p className="rounded-xl border border-dashed border-terracotta/40 bg-terracotta/[0.06] px-3 py-1.5 font-mono text-lg font-bold tracking-[0.24em] text-foreground">
                   {r.code}
                 </p>
                 <p className="mt-1 text-[11px] uppercase tracking-wide text-muted-foreground">
@@ -162,25 +163,26 @@ async function MyOffersTab({ userId }: { userId: string }) {
   )
 }
 
-/* ---------- Favoris / Découvrir / Historique / Profil ---------- */
-
 async function FavorisTab({ userId }: { userId: string }) {
   const { favorites } = await getClientDashboard(userId)
   return (
     <>
-      <Hero eyebrow="Tes adresses" title="Mes favoris" subtitle="Les lieux que tu gardes sous le coude." />
+      <PageHead eyebrow="Tes adresses" title="Mes favoris" subtitle="Les lieux que tu gardes sous le coude." />
       {favorites.length === 0 ? (
-        <Empty
+        <EmptyState
           icon={Heart}
           text="Aucun favori pour l’instant."
           cta={
-            <Link href="/espace-client?tab=decouvrir" className="inline-flex items-center gap-2 rounded-full bg-terracotta px-5 py-2.5 text-sm font-bold text-primary-foreground">
+            <Link
+              href="/espace-client?tab=decouvrir"
+              className="inline-flex items-center gap-2 rounded-full bg-terracotta px-5 py-2.5 text-sm font-bold text-primary-foreground"
+            >
               Explorer les adresses <ArrowRight className="size-4" />
             </Link>
           }
         />
       ) : (
-        <div className="grid gap-5 sm:grid-cols-2">
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {favorites.map((f) => (
             <PlaceCard
               key={f.id}
@@ -203,8 +205,8 @@ async function DecouvrirTab({ userId }: { userId: string }) {
   const favIds = new Set(favorites.map((f) => f.businessId))
   return (
     <>
-      <Hero eyebrow="À explorer" title="Découvrir" subtitle="Tous les restaurants et cafés validés sur Blayes." />
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <PageHead eyebrow="À explorer" title="Découvrir" subtitle="Tous les restaurants et cafés validés sur Blayes." />
+      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
         {businesses.map((b) => (
           <PlaceCard
             key={b.id}
@@ -225,11 +227,11 @@ async function HistoriqueTab({ userId }: { userId: string }) {
   const { viewed } = await getClientDashboard(userId)
   return (
     <>
-      <Hero eyebrow="Tes visites" title="Historique" subtitle="Les fiches que tu as consultées récemment." />
+      <PageHead eyebrow="Tes visites" title="Historique" subtitle="Les fiches que tu as consultées récemment." />
       {viewed.length === 0 ? (
-        <Empty icon={History} text="Aucune fiche consultée pour l’instant." />
+        <EmptyState icon={History} text="Aucune fiche consultée pour l’instant." />
       ) : (
-        <div className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
+        <div className="divide-y divide-border overflow-hidden rounded-3xl border border-border bg-card">
           {viewed.map((v) => (
             <Link
               key={v.id}
@@ -238,7 +240,8 @@ async function HistoriqueTab({ userId }: { userId: string }) {
             >
               <span>{v.business!.name}</span>
               <span className="text-xs text-muted-foreground">
-                {v.business!.city} · {new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium' }).format(v.createdAt)}
+                {v.business!.city} ·{' '}
+                {new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium' }).format(v.createdAt)}
               </span>
             </Link>
           ))}
@@ -252,7 +255,7 @@ async function ProfilTab({ userId, name, email }: { userId: string; name: string
   const { memberSince } = await getClientDashboard(userId)
   return (
     <>
-      <Hero eyebrow="Ton compte" title="Mon profil" />
+      <PageHead eyebrow="Ton compte" title="Mon profil" />
       <div className="max-w-xl rounded-3xl border border-border bg-card p-6">
         <dl className="space-y-4 text-sm">
           <div>
@@ -304,10 +307,7 @@ function PlaceCard({
         <div className="absolute right-3 top-3">
           <FavoriteToggleDb businessId={businessId} businessName={name} initialFavorited={favorited} />
         </div>
-        <Link
-          href={`/commerce/${slug}`}
-          className="absolute bottom-3 left-4 font-display text-lg font-bold text-white"
-        >
+        <Link href={`/commerce/${slug}`} className="absolute bottom-3 left-4 font-display text-lg font-bold text-white">
           {name}
         </Link>
       </div>
