@@ -6,7 +6,10 @@ import { ArrowLeft, Check, MapPin, MessageCircle, Phone, Star } from 'lucide-rea
 import { SiteHeader } from '@/components/layout/site-header'
 import { SiteFooter } from '@/components/layout/site-footer'
 import { getPublicBusiness } from '@/lib/queries'
+import { db } from '@/lib/db'
 import { CATEGORY_LABELS } from '@/lib/status'
+
+export const dynamic = 'force-dynamic'
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
@@ -18,6 +21,9 @@ export default async function CommercePage({ params }: { params: Promise<{ slug:
   const { slug } = await params
   const business = await getPublicBusiness(slug)
   if (!business) notFound()
+
+  // Log de vue (alimente les stats commerçant / admin).
+  db.event.create({ data: { type: 'BUSINESS_VIEW', businessId: business.id } }).catch(() => {})
 
   const cover = business.photos[0]?.url ?? '/images/restaurant.png'
   const avg =

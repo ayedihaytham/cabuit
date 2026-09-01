@@ -3,11 +3,12 @@
 import { useMemo, useState } from 'react'
 import { Filter, MapPin, Search, SlidersHorizontal, X } from 'lucide-react'
 import { BusinessCard } from '@/components/directory/business-card'
-import { filterBusinesses } from '@/lib/data/businesses'
 import { CATEGORIES, CITIES, SORT_OPTIONS } from '@/lib/constants'
-import type { Category } from '@/lib/types'
+import type { Business, Category } from '@/lib/types'
 
 type DirectoryBrowserProps = {
+  /** Établissements à parcourir (déjà chargés depuis la base). */
+  businesses: Business[]
   /** Restreint la recherche à une catégorie et masque le filtre catégorie. */
   lockedCategory?: Category
   initialQuery?: string
@@ -19,6 +20,7 @@ const ALL_CATEGORIES = 'Toutes les catégories'
 const ALL_CITIES = 'Toutes les zones'
 
 export function DirectoryBrowser({
+  businesses,
   lockedCategory,
   initialQuery = '',
   initialCategory,
@@ -31,17 +33,25 @@ export function DirectoryBrowser({
   const [verifiedOnly, setVerifiedOnly] = useState(false)
   const [filtersOpen, setFiltersOpen] = useState(false)
 
-  const results = useMemo(
-    () =>
-      filterBusinesses({
-        query,
-        category: lockedCategory ?? (category === ALL_CATEGORIES ? 'all' : (category as Category)),
-        city: city === ALL_CITIES ? 'all' : city,
-        verifiedOnly,
-        sort,
-      }),
-    [query, category, city, verifiedOnly, sort, lockedCategory],
-  )
+  const results = useMemo(() => {
+    const term = query.trim().toLowerCase()
+    const activeCategory = lockedCategory ?? (category === ALL_CATEGORIES ? null : category)
+
+    const filtered = businesses.filter((b) => {
+      const matchesTerm =
+        !term ||
+        [b.name, b.category, b.type, b.city].some((v) => v.toLowerCase().includes(term))
+      const matchesCategory = !activeCategory || b.category === activeCategory
+      const matchesCity = city === ALL_CITIES || b.city === city
+      const matchesVerified = !verifiedOnly || b.verified
+      return matchesTerm && matchesCategory && matchesCity && matchesVerified
+    })
+
+    if (sort === 'Note') return [...filtered].sort((a, b) => b.rating - a.rating)
+    if (sort === 'Nouveauté') return [...filtered].reverse()
+    if (sort === 'Proximité') return [...filtered].sort((a, b) => a.city.localeCompare(b.city))
+    return filtered
+  }, [businesses, query, category, city, verifiedOnly, sort, lockedCategory])
 
   const resetFilters = () => {
     setQuery('')

@@ -6,7 +6,8 @@ import { SiteFooter } from '@/components/layout/site-footer'
 import { HeroSearch } from '@/components/home/hero-search'
 import { FavoriteButton } from '@/components/home/favorite-button'
 import { SponsoredPlacement } from '@/components/sponsored-card'
-import { BUSINESSES } from '@/lib/data/businesses'
+import { listActiveBusinesses } from '@/lib/queries'
+import { toUiBusiness } from '@/lib/business-ui'
 
 const categories = [
   {
@@ -23,8 +24,10 @@ const categories = [
   },
 ]
 
-export default function HomePage() {
-  const selection = BUSINESSES.slice(0, 8)
+export const dynamic = 'force-dynamic'
+
+export default async function HomePage() {
+  const selection = (await listActiveBusinesses()).slice(0, 8).map(toUiBusiness)
 
   return (
     <div className="min-h-screen overflow-hidden bg-background text-foreground">

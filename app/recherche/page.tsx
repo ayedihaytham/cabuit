@@ -2,8 +2,13 @@ import type { Metadata } from 'next'
 import { SiteHeader } from '@/components/layout/site-header'
 import { SiteFooter } from '@/components/layout/site-footer'
 import { DirectoryBrowser } from '@/components/directory/directory-browser'
+import { listActiveBusinesses } from '@/lib/queries'
+import { toUiBusiness } from '@/lib/business-ui'
+import { db } from '@/lib/db'
 import { CATEGORIES } from '@/lib/constants'
 import type { Category } from '@/lib/types'
+
+export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title: 'Rechercher un commerce',
@@ -29,6 +34,14 @@ export default async function RecherchePage({
     | Category
     | undefined
 
+  const rows = await listActiveBusinesses()
+  const businesses = rows.map(toUiBusiness)
+
+  // Log léger de la recherche (argument de confiance côté commerçant).
+  if (query.trim()) {
+    db.event.create({ data: { type: 'SEARCH', query: query.trim() } }).catch(() => {})
+  }
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <SiteHeader />
@@ -47,7 +60,12 @@ export default async function RecherchePage({
         </div>
       </section>
 
-      <DirectoryBrowser initialQuery={query} initialCategory={initialCategory} showDescription />
+      <DirectoryBrowser
+        businesses={businesses}
+        initialQuery={query}
+        initialCategory={initialCategory}
+        showDescription
+      />
 
       <SiteFooter />
     </div>

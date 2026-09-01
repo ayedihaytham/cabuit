@@ -4,7 +4,8 @@ import { ArrowLeft, Utensils } from 'lucide-react'
 import { SiteHeader } from '@/components/layout/site-header'
 import { SiteFooter } from '@/components/layout/site-footer'
 import { DirectoryBrowser } from '@/components/directory/directory-browser'
-import { getBusinessesByCategory } from '@/lib/data/businesses'
+import { listActiveBusinesses } from '@/lib/queries'
+import { toUiBusiness } from '@/lib/business-ui'
 
 export const metadata: Metadata = {
   title: 'Restauration',
@@ -12,8 +13,12 @@ export const metadata: Metadata = {
     'Les restaurants tunisiens sélectionnés par Blayes pour leur goût, leur accueil et ce petit quelque chose qui donne envie de revenir.',
 }
 
-export default function RestaurationPage() {
-  const count = getBusinessesByCategory('Restauration').length
+export const dynamic = 'force-dynamic'
+
+export default async function RestaurationPage() {
+  const rows = await listActiveBusinesses({ category: 'RESTAURANT' })
+  const businesses = rows.map(toUiBusiness)
+  const count = businesses.length
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -47,7 +52,7 @@ export default function RestaurationPage() {
         </div>
       </section>
 
-      <DirectoryBrowser lockedCategory="Restauration" showDescription />
+      <DirectoryBrowser businesses={businesses} lockedCategory="Restauration" showDescription />
 
       <SiteFooter />
     </div>
