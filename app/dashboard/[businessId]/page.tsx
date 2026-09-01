@@ -5,6 +5,7 @@ import { AppHeader } from '@/components/dashboard/app-header'
 import { BusinessForm } from '@/components/dashboard/business-form'
 import { SubmitForReview } from '@/components/dashboard/submit-for-review'
 import { MenuEditor } from '@/components/dashboard/menu-editor'
+import { OfferManager } from '@/components/dashboard/offer-manager'
 import { ReviewReply } from '@/components/dashboard/review-reply'
 import { updateBusiness, submitBusiness } from '@/app/actions/business'
 import { requireMerchant } from '@/lib/session'
@@ -127,6 +128,17 @@ export default async function ManageBusinessPage({
                 <StatBox icon={Eye} n={stats.views} label="vues de la fiche" />
                 <StatBox icon={Phone} n={stats.contacts} label="clics contact" />
                 <StatBox icon={Star} n={stats.favorites} label="mises en favori" />
+              </div>
+            </section>
+
+            <section className="mt-6 rounded-2xl border border-terracotta/30 bg-terracotta/5 p-5 sm:p-7">
+              <h2 className="font-display text-2xl font-bold">Bons plans</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Une offre membres attire les clients Blayes et vous donne un trafic mesurable en
+                boutique. Ils présentent un code au comptoir.
+              </p>
+              <div className="mt-5">
+                <OfferManager businessId={business.id} offers={business.offers} />
               </div>
             </section>
 

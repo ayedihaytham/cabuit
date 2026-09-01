@@ -97,6 +97,46 @@ async function main() {
   }
   console.log(`✔ ${BUSINESSES.length} commerces + abonnements`)
 
+  // --- Bons plans de démonstration ---
+  const OFFERS: Record<string, { title: string; discountLabel: string; description: string; conditions?: string }[]> = {
+    'le-petit-souk': [
+      {
+        title: 'Le café offert après le déjeuner',
+        discountLabel: '1 offert',
+        description: 'Un café ou un thé offert pour tout déjeuner à la carte, du lundi au vendredi.',
+        conditions: 'Midi en semaine · 1 par personne',
+      },
+    ],
+    'cafe-panorama': [
+      {
+        title: 'Happy hour pâtisseries',
+        discountLabel: '-20%',
+        description: '-20% sur toutes les pâtisseries maison entre 16h et 18h.',
+        conditions: 'Tous les jours, 16h–18h',
+      },
+    ],
+    'salon-el-bahia': [
+      {
+        title: 'Le 2ᵉ thé à moitié prix',
+        discountLabel: '-50%',
+        description: 'Le deuxième thé à la menthe à -50% pour toute commande de deux thés.',
+      },
+    ],
+  }
+  for (const [slug, list] of Object.entries(OFFERS)) {
+    const biz = await db.business.findUnique({ where: { slug } })
+    if (!biz) continue
+    for (const o of list) {
+      const exists = await db.offer.findFirst({ where: { businessId: biz.id, title: o.title } })
+      if (!exists) {
+        await db.offer.create({
+          data: { businessId: biz.id, status: 'ACTIVE', ...o, conditions: o.conditions ?? null },
+        })
+      }
+    }
+  }
+  console.log('✔ bons plans de démo')
+
   // --- Fiche vitrine : menu + avis pour Le Petit Souk ---
   const petitSouk = await db.business.findUnique({ where: { slug: 'le-petit-souk' } })
   if (petitSouk) {

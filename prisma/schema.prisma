@@ -85,6 +85,13 @@ enum ReportStatus {
   DISMISSED
 }
 
+enum OfferStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  EXPIRED
+}
+
 // ------------------------------------------------------------------
 // Auth.js (NextAuth v5) + utilisateur
 // ------------------------------------------------------------------
@@ -102,16 +109,17 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  accounts       Account[]
-  sessions       Session[]
-  businesses     Business[]      @relation("BusinessOwner")
-  reviews        Review[]
-  favorites      Favorite[]
-  events         Event[]
-  auditLogs      AuditLog[]      @relation("AuditActor")
-  reportsMade    Report[]        @relation("ReportReporter")
-  reportsClosed  Report[]        @relation("ReportResolver")
-  paymentsLogged Payment[]       @relation("PaymentRecordedBy")
+  accounts         Account[]
+  sessions         Session[]
+  businesses       Business[]        @relation("BusinessOwner")
+  reviews          Review[]
+  favorites        Favorite[]
+  events           Event[]
+  auditLogs        AuditLog[]        @relation("AuditActor")
+  reportsMade      Report[]          @relation("ReportReporter")
+  reportsClosed    Report[]          @relation("ReportResolver")
+  paymentsLogged   Payment[]         @relation("PaymentRecordedBy")
+  offerRedemptions OfferRedemption[]
 }
 
 model Account {
@@ -181,6 +189,7 @@ model Business {
   events        Event[]
   reports       Report[]
   sponsoredDays SponsoredBooking[]
+  offers        Offer[]
 
   @@index([status, category])
   @@index([city])
@@ -198,9 +207,9 @@ model BusinessPhoto {
 model MenuSection {
   id         String     @id @default(cuid())
   businessId String
-  business   Business    @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  business   Business   @relation(fields: [businessId], references: [id], onDelete: Cascade)
   title      String
-  position   Int         @default(0)
+  position   Int        @default(0)
   items      MenuItem[]
 }
 
@@ -261,18 +270,18 @@ model Payment {
 // ------------------------------------------------------------------
 
 model Review {
-  id            String       @id @default(cuid())
-  businessId    String
-  business      Business     @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  authorId      String
-  author        User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  rating        Int // 1..5
-  text          String
-  status        ReviewStatus @default(PENDING)
-  ownerReply    String?
+  id             String       @id @default(cuid())
+  businessId     String
+  business       Business     @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  authorId       String
+  author         User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  rating         Int // 1..5
+  text           String
+  status         ReviewStatus @default(PENDING)
+  ownerReply     String?
   ownerRepliedAt DateTime?
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 
   @@unique([businessId, authorId])
   @@index([businessId, status])
@@ -312,16 +321,16 @@ model Event {
 model Report {
   id           String       @id @default(cuid())
   businessId   String
-  business     Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  business     Business     @relation(fields: [businessId], references: [id], onDelete: Cascade)
   reporterId   String?
-  reporter     User?         @relation("ReportReporter", fields: [reporterId], references: [id], onDelete: SetNull)
+  reporter     User?        @relation("ReportReporter", fields: [reporterId], references: [id], onDelete: SetNull)
   reason       String
   detail       String?
-  status       ReportStatus  @default(OPEN)
+  status       ReportStatus @default(OPEN)
   resolvedById String?
-  resolvedBy   User?         @relation("ReportResolver", fields: [resolvedById], references: [id], onDelete: SetNull)
+  resolvedBy   User?        @relation("ReportResolver", fields: [resolvedById], references: [id], onDelete: SetNull)
   resolvedAt   DateTime?
-  createdAt    DateTime      @default(now())
+  createdAt    DateTime     @default(now())
 }
 
 model SponsoredBooking {
@@ -334,6 +343,54 @@ model SponsoredBooking {
   amount     Int
   status     String   @default("PENDING")
   createdAt  DateTime @default(now())
+}
+
+// ------------------------------------------------------------------
+// Bons plans (offres réservées aux membres)
+// ------------------------------------------------------------------
+
+model Offer {
+  id              String      @id @default(cuid())
+  businessId      String
+  business        Business    @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  title           String
+  description     String
+  /**
+   * Étiquette courte affichée : "-15%", "1 thé offert", "Menu 25 DT".
+   */
+  discountLabel   String
+  conditions      String?
+  validUntil      DateTime?
+  status          OfferStatus @default(ACTIVE)
+  /**
+   * 0 = illimité.
+   */
+  maxRedemptions  Int         @default(0)
+  redemptionCount Int         @default(0)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  redemptions OfferRedemption[]
+
+  @@index([status, validUntil])
+  @@index([businessId])
+}
+
+model OfferRedemption {
+  id        String    @id @default(cuid())
+  offerId   String
+  offer     Offer     @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /**
+   * Code court montré au comptoir.
+   */
+  code      String    @unique
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@unique([offerId, userId])
+  @@index([userId])
 }
 
 model ContactMessage {

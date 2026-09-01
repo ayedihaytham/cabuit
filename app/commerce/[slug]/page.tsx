@@ -9,6 +9,8 @@ import { FavoriteToggleDb } from '@/components/business/favorite-toggle-db'
 import { ReviewFormDb } from '@/components/business/review-form-db'
 import { ReportButton } from '@/components/business/report-button'
 import { ContactLink } from '@/components/business/contact-link'
+import { ClaimOffer } from '@/components/business/claim-offer'
+import { OfferCard } from '@/components/offers/offer-card'
 import { getPublicBusiness } from '@/lib/queries'
 import { getSessionUser } from '@/lib/session'
 import { db } from '@/lib/db'
@@ -32,12 +34,18 @@ export default async function CommercePage({ params }: { params: Promise<{ slug:
     .catch(() => {})
 
   const isClient = user?.role === 'CLIENT'
-  const [favorite, myReview] = isClient
+  const [favorite, myReview, myRedemptions] = isClient
     ? await Promise.all([
         db.favorite.findUnique({ where: { userId_businessId: { userId: user!.id, businessId: business.id } } }),
         db.review.findUnique({ where: { businessId_authorId: { businessId: business.id, authorId: user!.id } } }),
+        db.offerRedemption.findMany({
+          where: { userId: user!.id, offerId: { in: business.offers.map((o) => o.id) } },
+          select: { offerId: true, code: true },
+        }),
       ])
-    : [null, null]
+    : [null, null, []]
+
+  const codeByOffer = new Map(myRedemptions.map((r) => [r.offerId, r.code]))
 
   const cover = business.photos[0]?.url ?? '/images/restaurant.png'
   const avg =
@@ -105,6 +113,32 @@ export default async function CommercePage({ params }: { params: Promise<{ slug:
             />
           )}
         </div>
+
+        {business.offers.length > 0 && (
+          <section className="mt-12 border-t border-border pt-10">
+            <p className="eyebrow">Réservé aux membres Blayes</p>
+            <h2 className="mt-2 font-display text-3xl font-bold">Bons plans</h2>
+            <div className="mt-6 grid gap-4 sm:grid-cols-2">
+              {business.offers.map((offer) => (
+                <OfferCard
+                  key={offer.id}
+                  title={offer.title}
+                  discountLabel={offer.discountLabel}
+                  description={offer.description}
+                  conditions={offer.conditions}
+                  validUntil={offer.validUntil}
+                  action={
+                    <ClaimOffer
+                      offerId={offer.id}
+                      isClient={isClient}
+                      initialCode={codeByOffer.get(offer.id)}
+                    />
+                  }
+                />
+              ))}
+            </div>
+          </section>
+        )}
 
         {business.menuSections.length > 0 && (
           <section className="mt-12 border-t border-border pt-10">

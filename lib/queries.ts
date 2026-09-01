@@ -43,8 +43,62 @@ export async function getPublicBusiness(slug: string) {
         orderBy: { createdAt: 'desc' },
         include: { author: { select: { name: true } } },
       },
+      offers: {
+        where: { status: 'ACTIVE', OR: [{ validUntil: null }, { validUntil: { gte: new Date() } }] },
+        orderBy: { createdAt: 'desc' },
+      },
     },
   })
+}
+
+// ------------------------------------------------------------------
+// Bons plans
+// ------------------------------------------------------------------
+
+const activeOfferWhere = () => ({
+  status: 'ACTIVE' as const,
+  OR: [{ validUntil: null }, { validUntil: { gte: new Date() } }],
+  business: { status: 'ACTIVE' as const },
+})
+
+export async function listActiveOffers(limit?: number) {
+  return db.offer.findMany({
+    where: activeOfferWhere(),
+    orderBy: { createdAt: 'desc' },
+    take: limit,
+    relationLoadStrategy: 'join',
+    include: {
+      business: {
+        select: {
+          slug: true,
+          name: true,
+          category: true,
+          city: true,
+          photos: { take: 1, orderBy: { position: 'asc' } },
+        },
+      },
+    },
+  })
+}
+
+export async function countActiveOffers() {
+  return db.offer.count({ where: activeOfferWhere() })
+}
+
+export async function getClientRedemptions(userId: string) {
+  return db.offerRedemption.findMany({
+    where: { userId },
+    orderBy: { createdAt: 'desc' },
+    relationLoadStrategy: 'join',
+    include: {
+      offer: { include: { business: { select: { slug: true, name: true, city: true } } } },
+    },
+  })
+}
+
+export async function getClaimedOfferIds(userId: string) {
+  const rows = await db.offerRedemption.findMany({ where: { userId }, select: { offerId: true } })
+  return new Set(rows.map((r) => r.offerId))
 }
 
 // ------------------------------------------------------------------
@@ -74,6 +128,15 @@ export async function getOwnedBusiness(id: string, ownerId: string) {
         where: { status: 'PUBLISHED' },
         orderBy: { createdAt: 'desc' },
         include: { author: { select: { name: true } } },
+      },
+      offers: {
+        orderBy: { createdAt: 'desc' },
+        include: {
+          redemptions: {
+            orderBy: { createdAt: 'desc' },
+            include: { user: { select: { name: true } } },
+          },
+        },
       },
     },
   })
@@ -139,6 +202,11 @@ export async function getAdminStats() {
       db.report.count({ where: { status: 'OPEN' } }),
     ])
 
+  const [offersActive, redemptions30d] = await Promise.all([
+    db.offer.count({ where: { status: 'ACTIVE' } }),
+    db.offerRedemption.count({ where: { createdAt: { gte: daysAgo(30) } } }),
+  ])
+
   const statusMap = Object.fromEntries(
     byStatus.map((row) => [row.status, row._count]),
   ) as Record<BusinessStatus, number>
@@ -160,6 +228,8 @@ export async function getAdminStats() {
     reviewsPending,
     events30d,
     reportsOpen,
+    offersActive,
+    redemptions30d,
   }
 }
 

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Users, Store, Coffee, TrendingUp, Clock, Star, Flag, ScrollText } from 'lucide-react'
+import { Users, Store, TrendingUp, Clock, Star, Flag, ScrollText, Ticket } from 'lucide-react'
 import { AppHeader } from '@/components/dashboard/app-header'
 import { ModerationActions } from '@/components/admin/moderation-actions'
 import { ReviewModeration, ReportActions } from '@/components/admin/simple-actions'
@@ -52,9 +52,14 @@ export default async function AdminPage({
           <Stat icon={TrendingUp} label="Revenu annuel récurrent" value={`${stats.arr} DT`} hint={`${stats.revenuePaid} DT encaissés`} />
         </div>
         <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Stat
+            icon={Ticket}
+            label="Bons plans utilisés (30 j)"
+            value={stats.redemptions30d}
+            hint={`${stats.offersActive} bons plans actifs`}
+          />
           <Stat icon={Star} label="Avis à modérer" value={stats.reviewsPending} />
           <Stat icon={Flag} label="Signalements ouverts" value={stats.reportsOpen} />
-          <Stat icon={Coffee} label="Événements (30 j)" value={stats.events30d} hint="recherches, vues, favoris, contacts" />
           <Link
             href="/admin/journal"
             className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 transition hover:border-terracotta"

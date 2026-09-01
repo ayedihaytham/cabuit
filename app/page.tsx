@@ -6,7 +6,8 @@ import { SiteFooter } from '@/components/layout/site-footer'
 import { HeroSearch } from '@/components/home/hero-search'
 import { FavoriteButton } from '@/components/home/favorite-button'
 import { SponsoredPlacement } from '@/components/sponsored-card'
-import { listActiveBusinesses } from '@/lib/queries'
+import { OfferCard } from '@/components/offers/offer-card'
+import { listActiveBusinesses, listActiveOffers } from '@/lib/queries'
 import { toUiBusiness } from '@/lib/business-ui'
 
 const categories = [
@@ -27,7 +28,8 @@ const categories = [
 export const revalidate = 300
 
 export default async function HomePage() {
-  const selection = (await listActiveBusinesses()).slice(0, 8).map(toUiBusiness)
+  const [rows, offers] = await Promise.all([listActiveBusinesses(), listActiveOffers(3)])
+  const selection = rows.slice(0, 8).map(toUiBusiness)
 
   return (
     <div className="min-h-screen overflow-hidden bg-background text-foreground">
@@ -107,6 +109,46 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {offers.length > 0 && (
+        <section className="mx-auto max-w-7xl px-5 py-16 lg:px-8 lg:py-20">
+          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+            <div>
+              <p className="eyebrow">Réservé aux membres</p>
+              <h2 className="mt-3 font-display text-3xl font-bold tracking-tight sm:text-4xl">
+                Les bons plans du moment.
+              </h2>
+              <p className="mt-2 max-w-lg text-sm text-muted-foreground">
+                Crée ton compte gratuit, récupère le bon plan et présente ton code au comptoir.
+              </p>
+            </div>
+            <Link
+              href="/inscription-client"
+              className="inline-flex w-fit items-center gap-2 rounded-full bg-terracotta px-5 py-3 text-sm font-bold text-primary-foreground"
+            >
+              En profiter <ArrowRight className="size-4" />
+            </Link>
+          </div>
+          <div className="mt-8 grid gap-4 md:grid-cols-3">
+            {offers.map((o) => (
+              <OfferCard
+                key={o.id}
+                title={o.title}
+                discountLabel={o.discountLabel}
+                description={o.description}
+                businessName={o.business.name}
+                businessSlug={o.business.slug}
+                businessCity={o.business.city}
+                action={
+                  <Link href={`/commerce/${o.business.slug}`} className="text-sm font-semibold text-terracotta hover:underline">
+                    Voir la fiche →
+                  </Link>
+                }
+              />
+            ))}
+          </div>
+        </section>
+      )}
 
       <SponsoredPlacement />
 
