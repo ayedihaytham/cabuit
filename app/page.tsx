@@ -111,7 +111,7 @@ export default async function HomePage() {
       </section>
 
       {offers.length > 0 && (
-        <section className="mx-auto max-w-7xl px-5 py-16 lg:px-8 lg:py-20">
+        <section id="bons-plans" className="mx-auto max-w-7xl scroll-mt-24 px-5 py-16 lg:px-8 lg:py-20">
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
             <div>
               <p className="eyebrow">Réservé aux membres</p>

@@ -101,6 +101,19 @@ export async function getClaimedOfferIds(userId: string) {
   return new Set(rows.map((r) => r.offerId))
 }
 
+export async function getClientCounts(userId: string) {
+  const [me, offers, redemptions, favorites] = await Promise.all([
+    db.user.findUnique({ where: { id: userId }, select: { createdAt: true } }),
+    countActiveOffers(),
+    db.offerRedemption.count({ where: { userId } }),
+    db.favorite.count({ where: { userId } }),
+  ])
+  return {
+    memberSince: me?.createdAt ?? new Date(),
+    counts: { offers, redemptions, favorites },
+  }
+}
+
 // ------------------------------------------------------------------
 // Commerçant
 // ------------------------------------------------------------------

@@ -29,6 +29,7 @@ export const FOOTER_LINKS = [
 
 export const MARKETING_NAV = [
   { label: 'Explorer', href: '/#categories' },
-  { label: 'Les bonnes adresses', href: '/#selection' },
+  { label: 'Bons plans', href: '/#bons-plans' },
+  { label: 'Les adresses', href: '/#selection' },
   { label: 'Tarifs', href: '/tarifs' },
 ]
