@@ -164,6 +164,9 @@ model Business {
   whatsapp    String?
   instagram   String?
   status      BusinessStatus @default(DRAFT)
+  verified    Boolean        @default(false)
+  rating      Float          @default(0)
+  reviewCount Int            @default(0)
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
 

@@ -72,6 +72,9 @@ async function main() {
         whatsapp: b.whatsapp,
         instagram: b.instagram,
         status: 'ACTIVE',
+        verified: b.verified,
+        rating: b.rating,
+        reviewCount: b.reviewCount,
       },
     })
 
