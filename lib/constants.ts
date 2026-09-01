@@ -22,7 +22,9 @@ export const SORT_OPTIONS = ['Pertinence', 'Proximité', 'Nouveauté', 'Note'] a
 export const FOOTER_LINKS = [
   { label: 'À propos', href: '/a-propos' },
   { label: 'Contact', href: '/contact' },
-  { label: 'CGU', href: '/#cgu' },
+  { label: 'CGA', href: '/cgu' },
+  { label: 'Confidentialité', href: '/confidentialite' },
+  { label: 'Mentions légales', href: '/mentions-legales' },
 ]
 
 export const MARKETING_NAV = [

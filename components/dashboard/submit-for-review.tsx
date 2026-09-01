@@ -43,7 +43,7 @@ export function SubmitForReview({ action }: Props) {
         <input type="checkbox" name="acceptTerms" className="mt-1 size-4 accent-terracotta" />
         <span>
           J’accepte les{' '}
-          <Link href="/#cgu" className="font-semibold text-terracotta underline">
+          <Link href="/cgu" target="_blank" className="font-semibold text-terracotta underline">
             Conditions Générales d’Abonnement (v1)
           </Link>{' '}
           de Blayes. Mon acceptation est enregistrée avec la date et mon adresse IP.

@@ -1,12 +1,14 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ArrowLeft, ExternalLink } from 'lucide-react'
+import { ArrowLeft, ExternalLink, Eye, Phone, Star } from 'lucide-react'
 import { AppHeader } from '@/components/dashboard/app-header'
 import { BusinessForm } from '@/components/dashboard/business-form'
 import { SubmitForReview } from '@/components/dashboard/submit-for-review'
+import { MenuEditor } from '@/components/dashboard/menu-editor'
+import { ReviewReply } from '@/components/dashboard/review-reply'
 import { updateBusiness, submitBusiness } from '@/app/actions/business'
 import { requireUser } from '@/lib/session'
-import { getOwnedBusiness } from '@/lib/queries'
+import { getOwnedBusiness, getBusinessStats } from '@/lib/queries'
 import { BUSINESS_STATUS_LABELS, SUB_STATUS_LABELS } from '@/lib/status'
 
 export const dynamic = 'force-dynamic'
@@ -28,6 +30,7 @@ export default async function ManageBusinessPage({
   const canSubmit = business.status === 'DRAFT' || business.status === 'REJECTED'
   const boundUpdate = updateBusiness.bind(null, business.id)
   const boundSubmit = submitBusiness.bind(null, business.id)
+  const stats = await getBusinessStats(business.id)
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -115,7 +118,60 @@ export default async function ManageBusinessPage({
             </section>
           )
         )}
+
+        {business.status === 'ACTIVE' && (
+          <>
+            <section className="mt-6 rounded-2xl border border-border bg-card p-5 sm:p-7">
+              <h2 className="font-display text-2xl font-bold">Statistiques (30 jours)</h2>
+              <div className="mt-4 grid grid-cols-3 gap-3 text-center">
+                <StatBox icon={Eye} n={stats.views} label="vues de la fiche" />
+                <StatBox icon={Phone} n={stats.contacts} label="clics contact" />
+                <StatBox icon={Star} n={stats.favorites} label="mises en favori" />
+              </div>
+            </section>
+
+            <section className="mt-6 rounded-2xl border border-border bg-card p-5 sm:p-7">
+              <h2 className="font-display text-2xl font-bold">Menu</h2>
+              <p className="mt-1 text-sm text-muted-foreground">Ce que verront les clients sur votre fiche.</p>
+              <div className="mt-5">
+                <MenuEditor businessId={business.id} sections={business.menuSections} />
+              </div>
+            </section>
+
+            <section className="mt-6 rounded-2xl border border-border bg-card p-5 sm:p-7">
+              <h2 className="font-display text-2xl font-bold">Avis reçus</h2>
+              {business.reviews.length === 0 ? (
+                <p className="mt-3 text-sm text-muted-foreground">Aucun avis publié pour l’instant.</p>
+              ) : (
+                <div className="mt-4 space-y-4">
+                  {business.reviews.map((r) => (
+                    <div key={r.id} className="rounded-xl border border-border p-4">
+                      <div className="flex items-center justify-between text-sm">
+                        <strong>{r.author.name ?? 'Client'}</strong>
+                        <span className="flex items-center gap-1 text-ochre">
+                          <Star className="size-3.5 fill-current" /> {r.rating}
+                        </span>
+                      </div>
+                      <p className="mt-2 text-sm text-muted-foreground">{r.text}</p>
+                      <ReviewReply reviewId={r.id} existing={r.ownerReply} />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          </>
+        )}
       </main>
+    </div>
+  )
+}
+
+function StatBox({ icon: Icon, n, label }: { icon: typeof Eye; n: number; label: string }) {
+  return (
+    <div className="rounded-xl bg-secondary/60 p-4">
+      <Icon className="mx-auto size-4 text-terracotta" />
+      <p className="mt-2 font-display text-2xl font-bold">{n}</p>
+      <p className="text-xs text-muted-foreground">{label}</p>
     </div>
   )
 }

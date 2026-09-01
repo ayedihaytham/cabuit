@@ -64,8 +64,55 @@ export async function getMerchantBusinesses(ownerId: string) {
 export async function getOwnedBusiness(id: string, ownerId: string) {
   return db.business.findFirst({
     where: { id, ownerId },
-    include: { subscription: true, photos: { orderBy: { position: 'asc' } } },
+    include: {
+      subscription: true,
+      photos: { orderBy: { position: 'asc' } },
+      menuSections: { orderBy: { position: 'asc' }, include: { items: { orderBy: { position: 'asc' } } } },
+      reviews: {
+        where: { status: 'PUBLISHED' },
+        orderBy: { createdAt: 'desc' },
+        include: { author: { select: { name: true } } },
+      },
+    },
   })
+}
+
+export async function getBusinessStats(businessId: string) {
+  const since = daysAgo(30)
+  const [views, contacts, favorites] = await Promise.all([
+    db.event.count({ where: { businessId, type: 'BUSINESS_VIEW', createdAt: { gte: since } } }),
+    db.event.count({ where: { businessId, type: 'CONTACT_CLICK', createdAt: { gte: since } } }),
+    db.favorite.count({ where: { businessId } }),
+  ])
+  return { views, contacts, favorites }
+}
+
+// ------------------------------------------------------------------
+// Client
+// ------------------------------------------------------------------
+
+export async function getClientDashboard(userId: string) {
+  const [favorites, viewed, recommended] = await Promise.all([
+    db.favorite.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      include: { business: { include: { photos: { take: 1, orderBy: { position: 'asc' } } } } },
+    }),
+    db.event.findMany({
+      where: { userId, type: 'BUSINESS_VIEW', businessId: { not: null } },
+      orderBy: { createdAt: 'desc' },
+      distinct: ['businessId'],
+      take: 8,
+      include: { business: { select: { slug: true, name: true, category: true, city: true } } },
+    }),
+    db.business.findMany({
+      where: { status: 'ACTIVE', favorites: { none: { userId } } },
+      orderBy: { rating: 'desc' },
+      take: 4,
+      include: { photos: { take: 1, orderBy: { position: 'asc' } } },
+    }),
+  ])
+  return { favorites, viewed, recommended }
 }
 
 // ------------------------------------------------------------------
@@ -73,7 +120,7 @@ export async function getOwnedBusiness(id: string, ownerId: string) {
 // ------------------------------------------------------------------
 
 export async function getAdminStats() {
-  const [clients, merchants, admins, byStatus, activeSubs, reviewsPending, events30d, payments] =
+  const [clients, merchants, admins, byStatus, activeSubs, reviewsPending, events30d, payments, reportsOpen] =
     await Promise.all([
       db.user.count({ where: { role: 'CLIENT' } }),
       db.user.count({ where: { role: 'MERCHANT' } }),
@@ -86,6 +133,7 @@ export async function getAdminStats() {
       db.review.count({ where: { status: 'PENDING' } }),
       db.event.count({ where: { createdAt: { gte: daysAgo(30) } } }),
       db.payment.aggregate({ where: { status: 'PAID' }, _sum: { amount: true } }),
+      db.report.count({ where: { status: 'OPEN' } }),
     ])
 
   const statusMap = Object.fromEntries(
@@ -108,6 +156,7 @@ export async function getAdminStats() {
     revenuePaid: payments._sum.amount ?? 0,
     reviewsPending,
     events30d,
+    reportsOpen,
   }
 }
 
@@ -132,6 +181,36 @@ export async function getBusinessForAdmin(id: string) {
       menuSections: { orderBy: { position: 'asc' }, include: { items: true } },
       _count: { select: { reviews: true, favorites: true, events: true } },
     },
+  })
+}
+
+export async function listPendingReviews() {
+  return db.review.findMany({
+    where: { status: 'PENDING' },
+    orderBy: { createdAt: 'desc' },
+    include: {
+      author: { select: { name: true, email: true } },
+      business: { select: { name: true, slug: true } },
+    },
+  })
+}
+
+export async function listReports(status: 'OPEN' | 'RESOLVED' | 'DISMISSED' = 'OPEN') {
+  return db.report.findMany({
+    where: { status },
+    orderBy: { createdAt: 'desc' },
+    include: {
+      business: { select: { name: true, slug: true, id: true } },
+      reporter: { select: { name: true, email: true } },
+    },
+  })
+}
+
+export async function getAuditLog() {
+  return db.auditLog.findMany({
+    orderBy: { createdAt: 'desc' },
+    take: 100,
+    include: { actor: { select: { name: true, email: true } } },
   })
 }
 

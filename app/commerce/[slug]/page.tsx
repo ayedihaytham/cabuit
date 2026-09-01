@@ -5,7 +5,12 @@ import { notFound } from 'next/navigation'
 import { ArrowLeft, Check, MapPin, MessageCircle, Phone, Star } from 'lucide-react'
 import { SiteHeader } from '@/components/layout/site-header'
 import { SiteFooter } from '@/components/layout/site-footer'
+import { FavoriteToggleDb } from '@/components/business/favorite-toggle-db'
+import { ReviewFormDb } from '@/components/business/review-form-db'
+import { ReportButton } from '@/components/business/report-button'
+import { ContactLink } from '@/components/business/contact-link'
 import { getPublicBusiness } from '@/lib/queries'
+import { getCurrentUser } from '@/lib/session'
 import { db } from '@/lib/db'
 import { CATEGORY_LABELS } from '@/lib/status'
 
@@ -19,11 +24,20 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function CommercePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const business = await getPublicBusiness(slug)
+  const [business, user] = await Promise.all([getPublicBusiness(slug), getCurrentUser()])
   if (!business) notFound()
 
-  // Log de vue (alimente les stats commerçant / admin).
-  db.event.create({ data: { type: 'BUSINESS_VIEW', businessId: business.id } }).catch(() => {})
+  db.event
+    .create({ data: { type: 'BUSINESS_VIEW', businessId: business.id, userId: user?.id ?? null } })
+    .catch(() => {})
+
+  const isClient = user?.role === 'CLIENT'
+  const [favorite, myReview] = isClient
+    ? await Promise.all([
+        db.favorite.findUnique({ where: { userId_businessId: { userId: user!.id, businessId: business.id } } }),
+        db.review.findUnique({ where: { businessId_authorId: { businessId: business.id, authorId: user!.id } } }),
+      ])
+    : [null, null]
 
   const cover = business.photos[0]?.url ?? '/images/restaurant.png'
   const avg =
@@ -65,14 +79,30 @@ export default async function CommercePage({ params }: { params: Promise<{ slug:
 
         <div className="mt-6 flex flex-wrap gap-3">
           {business.phone && (
-            <a href={`tel:${business.phone}`} className="inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-3 text-sm font-semibold text-sand hover:bg-terracotta">
+            <ContactLink
+              businessId={business.id}
+              href={`tel:${business.phone}`}
+              className="inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-3 text-sm font-semibold text-sand hover:bg-terracotta"
+            >
               <Phone className="size-4" /> Appeler
-            </a>
+            </ContactLink>
           )}
           {business.whatsapp && (
-            <a href={`https://wa.me/${business.whatsapp}`} className="inline-flex items-center gap-2 rounded-full border border-border px-5 py-3 text-sm font-semibold hover:border-olive hover:text-olive">
+            <ContactLink
+              businessId={business.id}
+              href={`https://wa.me/${business.whatsapp}`}
+              className="inline-flex items-center gap-2 rounded-full border border-border px-5 py-3 text-sm font-semibold hover:border-olive hover:text-olive"
+            >
               <MessageCircle className="size-4 text-olive" /> WhatsApp
-            </a>
+            </ContactLink>
+          )}
+          {isClient && (
+            <FavoriteToggleDb
+              businessId={business.id}
+              businessName={business.name}
+              initialFavorited={Boolean(favorite)}
+              variant="button"
+            />
           )}
         </div>
 
@@ -101,10 +131,11 @@ export default async function CommercePage({ params }: { params: Promise<{ slug:
           </section>
         )}
 
-        {business.reviews.length > 0 && (
-          <section className="mt-12 border-t border-border pt-10">
-            <p className="eyebrow">Avis clients</p>
-            <h2 className="mt-2 font-display text-3xl font-bold">Ce qu’en disent les clients</h2>
+        <section className="mt-12 border-t border-border pt-10">
+          <p className="eyebrow">Avis clients</p>
+          <h2 className="mt-2 font-display text-3xl font-bold">Ce qu’en disent les clients</h2>
+
+          {business.reviews.length > 0 ? (
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
               {business.reviews.map((r) => (
                 <article key={r.id} className="rounded-2xl border border-border bg-card p-5">
@@ -117,14 +148,32 @@ export default async function CommercePage({ params }: { params: Promise<{ slug:
                   <p className="mt-3 text-sm leading-6 text-muted-foreground">{r.text}</p>
                   {r.ownerReply && (
                     <p className="mt-3 rounded-xl bg-secondary/70 p-3 text-sm text-muted-foreground">
-                      <span className="font-semibold text-olive">Réponse : </span>{r.ownerReply}
+                      <span className="font-semibold text-olive">Réponse : </span>
+                      {r.ownerReply}
                     </p>
                   )}
                 </article>
               ))}
             </div>
-          </section>
-        )}
+          ) : (
+            <p className="mt-4 text-sm text-muted-foreground">Aucun avis pour l’instant.</p>
+          )}
+
+          {isClient ? (
+            <div className="mt-6 max-w-lg">
+              <ReviewFormDb businessId={business.id} existing={myReview} />
+            </div>
+          ) : (
+            <p className="mt-6 text-sm text-muted-foreground">
+              <Link href="/connexion-client" className="font-semibold text-terracotta">
+                Connecte-toi
+              </Link>{' '}
+              pour laisser un avis.
+            </p>
+          )}
+        </section>
+
+        <ReportButton businessId={business.id} />
       </main>
 
       <SiteFooter />

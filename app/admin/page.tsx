@@ -1,12 +1,15 @@
 import Link from 'next/link'
-import { Users, Store, Coffee, TrendingUp, Clock, Star } from 'lucide-react'
+import { Users, Store, Coffee, TrendingUp, Clock, Star, Flag, ScrollText } from 'lucide-react'
 import { AppHeader } from '@/components/dashboard/app-header'
 import { ModerationActions } from '@/components/admin/moderation-actions'
+import { ReviewModeration, ReportActions } from '@/components/admin/simple-actions'
 import { requireUser } from '@/lib/session'
 import {
   getAdminStats,
   listBusinessesForAdmin,
   listClientsForAdmin,
+  listPendingReviews,
+  listReports,
 } from '@/lib/queries'
 import { BUSINESS_STATUS_LABELS, CATEGORY_LABELS } from '@/lib/status'
 
@@ -17,6 +20,8 @@ const TABS = [
   { key: 'active', label: 'En ligne' },
   { key: 'all', label: 'Tous' },
   { key: 'clients', label: 'Clients' },
+  { key: 'reviews', label: 'Avis' },
+  { key: 'reports', label: 'Signalements' },
 ] as const
 type TabKey = (typeof TABS)[number]['key']
 
@@ -48,7 +53,15 @@ export default async function AdminPage({
         </div>
         <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Stat icon={Star} label="Avis à modérer" value={stats.reviewsPending} />
-          <Stat icon={Coffee} label="Événements (30 j)" value={stats.events30d} hint="recherches, vues, favoris" />
+          <Stat icon={Flag} label="Signalements ouverts" value={stats.reportsOpen} />
+          <Stat icon={Coffee} label="Événements (30 j)" value={stats.events30d} hint="recherches, vues, favoris, contacts" />
+          <Link
+            href="/admin/journal"
+            className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 transition hover:border-terracotta"
+          >
+            <span className="text-sm font-semibold">Journal d’activité</span>
+            <ScrollText className="size-4 text-terracotta" />
+          </Link>
         </div>
 
         {/* Onglets */}
@@ -69,7 +82,15 @@ export default async function AdminPage({
         </nav>
 
         <div className="mt-6">
-          {active === 'clients' ? <ClientsTable /> : <BusinessTable tab={active} />}
+          {active === 'clients' ? (
+            <ClientsTable />
+          ) : active === 'reviews' ? (
+            <ReviewsTable />
+          ) : active === 'reports' ? (
+            <ReportsTable />
+          ) : (
+            <BusinessTable tab={active} />
+          )}
         </div>
       </main>
     </div>
@@ -167,6 +188,69 @@ async function ClientsTable() {
               <span>{c._count.reviews} avis</span>
               <span>{new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium' }).format(c.createdAt)}</span>
             </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+async function ReviewsTable() {
+  const reviews = await listPendingReviews()
+  if (reviews.length === 0) {
+    return <p className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">Aucun avis à modérer.</p>
+  }
+  return (
+    <div className="overflow-hidden rounded-2xl border border-border bg-card">
+      <div className="divide-y divide-border">
+        {reviews.map((r) => (
+          <div key={r.id} className="flex flex-col gap-3 p-5">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold">
+                {r.author.name ?? r.author.email} · sur{' '}
+                <Link href={`/commerce/${r.business.slug}`} className="text-terracotta hover:underline">
+                  {r.business.name}
+                </Link>
+              </p>
+              <span className="flex items-center gap-1 text-ochre">
+                <Star className="size-3.5 fill-current" /> {r.rating}
+              </span>
+            </div>
+            <p className="text-sm text-muted-foreground">{r.text}</p>
+            <ReviewModeration reviewId={r.id} />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+async function ReportsTable() {
+  const reports = await listReports('OPEN')
+  if (reports.length === 0) {
+    return <p className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">Aucun signalement ouvert.</p>
+  }
+  return (
+    <div className="overflow-hidden rounded-2xl border border-border bg-card">
+      <div className="divide-y divide-border">
+        {reports.map((r) => (
+          <div key={r.id} className="flex flex-col gap-3 p-5">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold">
+                <Link href={`/admin/commerces/${r.business.id}`} className="text-terracotta hover:underline">
+                  {r.business.name}
+                </Link>{' '}
+                — {r.reason}
+              </p>
+              <span className="text-xs text-muted-foreground">
+                {new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium' }).format(r.createdAt)}
+              </span>
+            </div>
+            {r.detail && <p className="text-sm text-muted-foreground">{r.detail}</p>}
+            <p className="text-xs text-muted-foreground">
+              Signalé par {r.reporter ? (r.reporter.name ?? r.reporter.email) : 'un visiteur'}
+            </p>
+            <ReportActions reportId={r.id} />
           </div>
         ))}
       </div>

@@ -1,18 +1,14 @@
 'use client'
 
-import { FormEvent, useState } from 'react'
+import { useActionState } from 'react'
 import { Check, Link2, Mail, Send } from 'lucide-react'
 import { SiteHeader } from '@/components/layout/site-header'
 import { SiteFooter } from '@/components/layout/site-footer'
+import { sendContactMessage, type ContactState } from '@/app/actions/contact'
 import { CONTACT_EMAIL, INSTAGRAM_URL } from '@/lib/constants'
 
 export default function ContactPage() {
-  const [sent, setSent] = useState(false)
-
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setSent(true)
-  }
+  const [state, formAction, pending] = useActionState<ContactState, FormData>(sendContactMessage, {})
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -29,23 +25,17 @@ export default function ContactPage() {
             Écris-nous.
           </p>
           <div className="mt-10 flex flex-col gap-5 text-sm">
-            <a
-              href={`mailto:${CONTACT_EMAIL}`}
-              className="flex items-center gap-3 font-semibold hover:text-terracotta"
-            >
+            <a href={`mailto:${CONTACT_EMAIL}`} className="flex items-center gap-3 font-semibold hover:text-terracotta">
               <Mail className="size-5 text-terracotta" /> {CONTACT_EMAIL}
             </a>
-            <a
-              href={INSTAGRAM_URL}
-              className="flex items-center gap-3 font-semibold hover:text-terracotta"
-            >
+            <a href={INSTAGRAM_URL} className="flex items-center gap-3 font-semibold hover:text-terracotta">
               <Link2 className="size-5 text-terracotta" /> @blayes.tn
             </a>
           </div>
         </div>
 
         <div className="rounded-[2rem] border border-border bg-card p-6 shadow-sm sm:p-8">
-          {sent ? (
+          {state.ok ? (
             <div className="flex min-h-80 flex-col items-center justify-center text-center">
               <span className="flex size-16 items-center justify-center rounded-full bg-olive/10 text-olive">
                 <Check className="size-8" />
@@ -54,16 +44,9 @@ export default function ContactPage() {
               <p className="mt-3 text-sm text-muted-foreground">
                 Merci, notre équipe revient vers toi rapidement.
               </p>
-              <button
-                type="button"
-                onClick={() => setSent(false)}
-                className="mt-7 text-sm font-semibold text-terracotta"
-              >
-                Envoyer un autre message
-              </button>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+            <form action={formAction} className="flex flex-col gap-5">
               <label className="field-label">
                 Nom
                 <input name="name" required className="field-input" />
@@ -76,11 +59,17 @@ export default function ContactPage() {
                 Message
                 <textarea name="message" required rows={6} className="field-input resize-none" />
               </label>
+              {state.error && (
+                <p className="rounded-xl bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">
+                  {state.error}
+                </p>
+              )}
               <button
                 type="submit"
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-terracotta px-5 py-3.5 text-sm font-bold text-primary-foreground hover:opacity-90"
+                disabled={pending}
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-terracotta px-5 py-3.5 text-sm font-bold text-primary-foreground hover:opacity-90 disabled:opacity-60"
               >
-                Envoyer le message <Send className="size-4" />
+                {pending ? 'Envoi…' : 'Envoyer le message'} <Send className="size-4" />
               </button>
             </form>
           )}
