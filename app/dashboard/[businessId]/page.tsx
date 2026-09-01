@@ -7,7 +7,7 @@ import { SubmitForReview } from '@/components/dashboard/submit-for-review'
 import { MenuEditor } from '@/components/dashboard/menu-editor'
 import { ReviewReply } from '@/components/dashboard/review-reply'
 import { updateBusiness, submitBusiness } from '@/app/actions/business'
-import { requireUser } from '@/lib/session'
+import { requireMerchant } from '@/lib/session'
 import { getOwnedBusiness, getBusinessStats } from '@/lib/queries'
 import { BUSINESS_STATUS_LABELS, SUB_STATUS_LABELS } from '@/lib/status'
 
@@ -20,7 +20,7 @@ export default async function ManageBusinessPage({
   params: Promise<{ businessId: string }>
   searchParams: Promise<{ created?: string }>
 }) {
-  const user = await requireUser(['MERCHANT'])
+  const user = await requireMerchant()
   const { businessId } = await params
   const { created } = await searchParams
   const business = await getOwnedBusiness(businessId, user.id)

@@ -24,3 +24,16 @@ export async function requireUser(roles?: Role[]) {
   }
   return user
 }
+
+/**
+ * Espace commerçant strict : un ADMIN est renvoyé vers sa console (il n'a
+ * pas d'établissement à lui). Pour voir la fiche d'un abonné, l'admin
+ * passe par /admin/commerces/[id].
+ */
+export async function requireMerchant() {
+  const user = await getCurrentUser()
+  if (!user) redirect('/connexion')
+  if (user.role === 'ADMIN') redirect('/admin')
+  if (user.role !== 'MERCHANT') redirect('/')
+  return user
+}

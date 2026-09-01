@@ -3,12 +3,12 @@ import { ArrowLeft } from 'lucide-react'
 import { AppHeader } from '@/components/dashboard/app-header'
 import { BusinessForm } from '@/components/dashboard/business-form'
 import { createBusiness } from '@/app/actions/business'
-import { requireUser } from '@/lib/session'
+import { requireMerchant } from '@/lib/session'
 
 export const dynamic = 'force-dynamic'
 
 export default async function NewBusinessPage() {
-  const user = await requireUser(['MERCHANT'])
+  const user = await requireMerchant()
 
   return (
     <div className="min-h-screen bg-background text-foreground">

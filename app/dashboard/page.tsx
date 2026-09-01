@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { ArrowRight, Plus, Star, Heart, ExternalLink } from 'lucide-react'
 import { AppHeader } from '@/components/dashboard/app-header'
-import { requireUser } from '@/lib/session'
+import { requireMerchant } from '@/lib/session'
 import { getMerchantBusinesses } from '@/lib/queries'
 import { BUSINESS_STATUS_LABELS, SUB_STATUS_LABELS, CATEGORY_LABELS } from '@/lib/status'
 
@@ -12,7 +12,7 @@ export default async function DashboardPage({
 }: {
   searchParams: Promise<{ submitted?: string }>
 }) {
-  const user = await requireUser(['MERCHANT'])
+  const user = await requireMerchant()
   const businesses = await getMerchantBusinesses(user.id)
   const { submitted } = await searchParams
 

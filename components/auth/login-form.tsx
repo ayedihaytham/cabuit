@@ -8,7 +8,7 @@ import { PasswordInput } from '@/components/forms/password-input'
 import { CONTACT_EMAIL } from '@/lib/constants'
 
 type LoginFormProps = {
-  /** `pro` = commerçant / admin -> /dashboard ; `client` -> /espace-client */
+  /** `pro` = commerçant / admin ; `client` = client. La destination dépend du rôle du compte. */
   variant: 'pro' | 'client'
   googleEnabled?: boolean
 }
@@ -18,8 +18,9 @@ export function LoginForm({ variant, googleEnabled = false }: LoginFormProps) {
   const [error, setError] = useState('')
   const [pending, setPending] = useState(false)
 
-  const fallback = variant === 'pro' ? '/dashboard' : '/espace-client'
-  const next = params.get('next') || fallback
+  // Si le middleware a renvoyé vers une page précise, on y retourne ; sinon
+  // /apres-connexion aiguille selon le rôle (ADMIN -> /admin, etc.).
+  const next = params.get('next') || '/apres-connexion'
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
