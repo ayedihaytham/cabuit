@@ -1,11 +1,25 @@
+import { unstable_cache } from 'next/cache'
 import type { BusinessStatus, Category } from '@prisma/client'
 import { db } from '@/lib/db'
+
+/** Tags de cache — invalidés par les Server Actions via revalidateTag(). */
+export const TAG = {
+  businesses: 'businesses',
+  offers: 'offers',
+  stats: 'admin-stats',
+} as const
 
 // ------------------------------------------------------------------
 // Public / client
 // ------------------------------------------------------------------
 
-export async function listActiveBusinesses(options: {
+export const listActiveBusinesses = unstable_cache(
+  _listActiveBusinesses,
+  ['list-active-businesses'],
+  { revalidate: 120, tags: [TAG.businesses] },
+)
+
+async function _listActiveBusinesses(options: {
   category?: Category
   city?: string
   query?: string
@@ -61,7 +75,12 @@ const activeOfferWhere = () => ({
   business: { status: 'ACTIVE' as const },
 })
 
-export async function listActiveOffers(limit?: number) {
+export const listActiveOffers = unstable_cache(_listActiveOffers, ['list-active-offers'], {
+  revalidate: 120,
+  tags: [TAG.offers, TAG.businesses],
+})
+
+async function _listActiveOffers(limit?: number) {
   return db.offer.findMany({
     where: activeOfferWhere(),
     orderBy: { createdAt: 'desc' },
@@ -198,26 +217,40 @@ export async function getClientDashboard(userId: string) {
 // Admin
 // ------------------------------------------------------------------
 
-export async function getAdminStats() {
-  const [clients, merchants, admins, byStatus, activeSubs, reviewsPending, events30d, payments, reportsOpen] =
-    await Promise.all([
-      db.user.count({ where: { role: 'CLIENT' } }),
-      db.user.count({ where: { role: 'MERCHANT' } }),
-      db.user.count({ where: { role: 'ADMIN' } }),
-      db.business.groupBy({ by: ['status'], _count: true }),
-      db.subscription.findMany({
-        where: { status: { in: ['ACTIVE', 'TRIALING'] } },
-        select: { pricePerYear: true },
-      }),
-      db.review.count({ where: { status: 'PENDING' } }),
-      db.event.count({ where: { createdAt: { gte: daysAgo(30) } } }),
-      db.payment.aggregate({ where: { status: 'PAID' }, _sum: { amount: true } }),
-      db.report.count({ where: { status: 'OPEN' } }),
-    ])
+export const getAdminStats = unstable_cache(_getAdminStats, ['admin-stats'], {
+  revalidate: 120,
+  tags: [TAG.stats, TAG.businesses],
+})
 
-  const [offersActive, redemptions30d] = await Promise.all([
+async function _getAdminStats() {
+  const since = daysAgo(30)
+  const [
+    clients,
+    merchants,
+    admins,
+    byStatus,
+    activeSubs,
+    reviewsPending,
+    events30d,
+    payments,
+    reportsOpen,
+    offersActive,
+    redemptions30d,
+  ] = await Promise.all([
+    db.user.count({ where: { role: 'CLIENT' } }),
+    db.user.count({ where: { role: 'MERCHANT' } }),
+    db.user.count({ where: { role: 'ADMIN' } }),
+    db.business.groupBy({ by: ['status'], _count: true }),
+    db.subscription.findMany({
+      where: { status: { in: ['ACTIVE', 'TRIALING'] } },
+      select: { pricePerYear: true },
+    }),
+    db.review.count({ where: { status: 'PENDING' } }),
+    db.event.count({ where: { createdAt: { gte: since } } }),
+    db.payment.aggregate({ where: { status: 'PAID' }, _sum: { amount: true } }),
+    db.report.count({ where: { status: 'OPEN' } }),
     db.offer.count({ where: { status: 'ACTIVE' } }),
-    db.offerRedemption.count({ where: { createdAt: { gte: daysAgo(30) } } }),
+    db.offerRedemption.count({ where: { createdAt: { gte: since } } }),
   ])
 
   const statusMap = Object.fromEntries(

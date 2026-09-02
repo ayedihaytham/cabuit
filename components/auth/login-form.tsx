@@ -18,9 +18,11 @@ export function LoginForm({ variant, googleEnabled = false }: LoginFormProps) {
   const [error, setError] = useState('')
   const [pending, setPending] = useState(false)
 
-  // Si le middleware a renvoyé vers une page précise, on y retourne ; sinon
-  // /apres-connexion aiguille selon le rôle (ADMIN -> /admin, etc.).
-  const next = params.get('next') || '/apres-connexion'
+  const HOME_BY_ROLE: Record<string, string> = {
+    ADMIN: '/admin',
+    MERCHANT: '/dashboard',
+    CLIENT: '/espace-client',
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -40,8 +42,14 @@ export function LoginForm({ variant, googleEnabled = false }: LoginFormProps) {
       return
     }
 
-    // Navigation "dure" : garantit que le middleware relit le cookie de session frais.
-    window.location.assign(next)
+    // Destination : ?next explicite, sinon l'accueil du rôle (1 seul chargement,
+    // plus de rebond par /apres-connexion).
+    let target = params.get('next')
+    if (!target) {
+      const session = await fetch('/api/auth/session').then((r) => r.json()).catch(() => null)
+      target = HOME_BY_ROLE[session?.user?.role] ?? '/'
+    }
+    window.location.assign(target)
   }
 
   return (
@@ -96,7 +104,7 @@ export function LoginForm({ variant, googleEnabled = false }: LoginFormProps) {
           </div>
           <button
             type="button"
-            onClick={() => signIn('google', { redirectTo: next })}
+            onClick={() => signIn('google', { redirectTo: params.get('next') ?? '/apres-connexion' })}
             className="w-full rounded-full border border-border px-5 py-3 text-sm font-semibold transition hover:bg-secondary"
           >
             Continuer avec Google

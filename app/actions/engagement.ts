@@ -1,6 +1,7 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
+import { TAG } from '@/lib/queries'
 import { z } from 'zod'
 import { db } from '@/lib/db'
 import { requireUser, getSessionUser } from '@/lib/session'
@@ -131,6 +132,8 @@ export async function moderateReview(reviewId: string, action: 'publish' | 'reje
     },
   })
 
+  revalidateTag(TAG.stats, 'max')
+  revalidateTag(TAG.businesses, 'max')
   revalidatePath('/admin')
   return { ok: true }
 }
@@ -154,6 +157,7 @@ export async function submitReport(
   await db.report.create({
     data: { businessId, reporterId: user?.id ?? null, reason, detail: detail || null },
   })
+  revalidateTag(TAG.stats, 'max')
   return { ok: true }
 }
 
@@ -163,6 +167,7 @@ export async function resolveReport(reportId: string, action: 'RESOLVED' | 'DISM
     where: { id: reportId },
     data: { status: action, resolvedById: admin.id, resolvedAt: new Date() },
   })
+  revalidateTag(TAG.stats, 'max')
   revalidatePath('/admin')
   return { ok: true }
 }

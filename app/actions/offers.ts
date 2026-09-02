@@ -1,6 +1,7 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
+import { TAG } from '@/lib/queries'
 import { z } from 'zod'
 import { db } from '@/lib/db'
 import { requireUser, requireMerchant } from '@/lib/session'
@@ -70,8 +71,8 @@ export async function createOffer(
 
   revalidatePath(`/dashboard/${businessId}`)
   revalidatePath(`/commerce/${biz.slug}`)
-  revalidatePath('/')
-  revalidatePath('/espace-client')
+  revalidateTag(TAG.offers, 'max')
+  revalidateTag(TAG.stats, 'max')
   return { ok: true }
 }
 
@@ -88,7 +89,7 @@ export async function toggleOffer(offerId: string) {
     data: { status: offer.status === 'ACTIVE' ? 'PAUSED' : 'ACTIVE' },
   })
   revalidatePath(`/dashboard/${offer.business.id}`)
-  revalidatePath(`/commerce/${offer.business.slug}`)
+  revalidateTag(TAG.offers, 'max')
   return { ok: true }
 }
 
@@ -102,6 +103,7 @@ export async function deleteOffer(offerId: string) {
   await db.offer.delete({ where: { id: offerId } })
   revalidatePath(`/dashboard/${offer.business.id}`)
   revalidatePath(`/commerce/${offer.business.slug}`)
+  revalidateTag(TAG.offers, 'max')
   return { ok: true }
 }
 
@@ -158,7 +160,6 @@ export async function claimOffer(offerId: string) {
     db.offer.update({ where: { id: offerId }, data: { redemptionCount: { increment: 1 } } }),
   ])
 
-  revalidatePath('/espace-client')
-  revalidatePath(`/commerce/${offer.business.slug}`)
+  revalidateTag(TAG.offers, 'max')
   return { ok: true, code }
 }

@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
 import { db } from '@/lib/db'
@@ -8,6 +8,7 @@ import { requireUser } from '@/lib/session'
 import { slugify } from '@/lib/slug'
 import { businessSchema, submitSchema } from '@/lib/validations'
 import { PLANS } from '@/lib/data/plans'
+import { TAG } from '@/lib/queries'
 
 export type FormState = { error?: string; fieldErrors?: Record<string, string[]>; ok?: boolean }
 
@@ -78,7 +79,7 @@ export async function updateBusiness(businessId: string, _prev: FormState, formD
   })
 
   revalidatePath(`/dashboard/${businessId}`)
-  revalidatePath('/dashboard')
+  revalidateTag(TAG.businesses, 'max')
   return { ok: true }
 }
 
@@ -137,6 +138,6 @@ export async function submitBusiness(businessId: string, _prev: FormState, formD
     db.business.update({ where: { id: businessId }, data: { status: 'PENDING' } }),
   ])
 
-  revalidatePath('/dashboard')
+  revalidateTag(TAG.stats, 'max')
   redirect('/dashboard?submitted=1')
 }

@@ -1,10 +1,8 @@
-import Link from 'next/link'
 import { Users, Store, TrendingUp, Clock, Star, Flag, Ticket } from 'lucide-react'
 import { AppShell } from '@/components/app/app-shell'
 import { PageHead } from '@/components/app/ui'
 import { adminNav } from '@/lib/nav'
-import { ModerationActions } from '@/components/admin/moderation-actions'
-import { ReviewModeration, ReportActions } from '@/components/admin/simple-actions'
+import { BusinessRows, ReviewRows, ReportRows } from '@/components/admin/moderation-tables'
 import { requireUser } from '@/lib/session'
 import {
   getAdminStats,
@@ -13,7 +11,6 @@ import {
   listPendingReviews,
   listReports,
 } from '@/lib/queries'
-import { BUSINESS_STATUS_LABELS, CATEGORY_LABELS } from '@/lib/status'
 
 export const dynamic = 'force-dynamic'
 
@@ -104,48 +101,10 @@ function Stat({
 
 async function BusinessTable({ tab }: { tab: 'pending' | 'all' }) {
   const businesses = await listBusinessesForAdmin(tab === 'pending' ? 'PENDING' : undefined)
-
   if (businesses.length === 0) {
-    return <p className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">Rien ici pour le moment.</p>
+    return <p className="rounded-3xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">Rien ici pour le moment.</p>
   }
-
-  return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-card">
-      <div className="divide-y divide-border">
-        {businesses.map((b) => {
-          const s = BUSINESS_STATUS_LABELS[b.status]
-          return (
-            <div key={b.id} className="flex flex-col gap-3 p-5 md:grid md:grid-cols-[1.6fr_1fr_1fr_auto] md:items-center">
-              <div>
-                <Link href={`/admin/commerces/${b.id}`} className="font-semibold hover:text-terracotta">
-                  {b.name}
-                </Link>
-                <p className="text-xs text-muted-foreground">
-                  {CATEGORY_LABELS[b.category]} · {b.city} · {b.owner.email}
-                </p>
-              </div>
-              <span className={`w-fit rounded-full px-2.5 py-0.5 text-xs font-bold ${s.tone}`}>{s.label}</span>
-              <span className="text-sm text-muted-foreground">
-                {b.subscription ? `${b.subscription.tier} · ${b.subscription.pricePerYear} DT/an` : 'Sans abonnement'}
-              </span>
-              <ModerationActions
-                businessId={b.id}
-                actions={
-                  b.status === 'PENDING'
-                    ? ['approve', 'reject']
-                    : b.status === 'ACTIVE'
-                      ? ['suspend']
-                      : b.status === 'SUSPENDED'
-                        ? ['reactivate']
-                        : ['approve', 'reject']
-                }
-              />
-            </div>
-          )
-        })}
-      </div>
-    </div>
-  )
+  return <BusinessRows rows={businesses} />
 }
 
 async function ClientsTable() {
@@ -177,62 +136,15 @@ async function ClientsTable() {
 async function ReviewsTable() {
   const reviews = await listPendingReviews()
   if (reviews.length === 0) {
-    return <p className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">Aucun avis à modérer.</p>
+    return <p className="rounded-3xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">Aucun avis à modérer.</p>
   }
-  return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-card">
-      <div className="divide-y divide-border">
-        {reviews.map((r) => (
-          <div key={r.id} className="flex flex-col gap-3 p-5">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold">
-                {r.author.name ?? r.author.email} · sur{' '}
-                <Link href={`/commerce/${r.business.slug}`} className="text-terracotta hover:underline">
-                  {r.business.name}
-                </Link>
-              </p>
-              <span className="flex items-center gap-1 text-ochre">
-                <Star className="size-3.5 fill-current" /> {r.rating}
-              </span>
-            </div>
-            <p className="text-sm text-muted-foreground">{r.text}</p>
-            <ReviewModeration reviewId={r.id} />
-          </div>
-        ))}
-      </div>
-    </div>
-  )
+  return <ReviewRows rows={reviews} />
 }
 
 async function ReportsTable() {
   const reports = await listReports('OPEN')
   if (reports.length === 0) {
-    return <p className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">Aucun signalement ouvert.</p>
+    return <p className="rounded-3xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">Aucun signalement ouvert.</p>
   }
-  return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-card">
-      <div className="divide-y divide-border">
-        {reports.map((r) => (
-          <div key={r.id} className="flex flex-col gap-3 p-5">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold">
-                <Link href={`/admin/commerces/${r.business.id}`} className="text-terracotta hover:underline">
-                  {r.business.name}
-                </Link>{' '}
-                — {r.reason}
-              </p>
-              <span className="text-xs text-muted-foreground">
-                {new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium' }).format(r.createdAt)}
-              </span>
-            </div>
-            {r.detail && <p className="text-sm text-muted-foreground">{r.detail}</p>}
-            <p className="text-xs text-muted-foreground">
-              Signalé par {r.reporter ? (r.reporter.name ?? r.reporter.email) : 'un visiteur'}
-            </p>
-            <ReportActions reportId={r.id} />
-          </div>
-        ))}
-      </div>
-    </div>
-  )
+  return <ReportRows rows={reports} />
 }

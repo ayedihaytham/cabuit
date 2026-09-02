@@ -1,9 +1,10 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import type { BusinessStatus } from '@prisma/client'
 import { db } from '@/lib/db'
 import { requireUser } from '@/lib/session'
+import { TAG } from '@/lib/queries'
 
 const TRANSITIONS: Record<string, BusinessStatus> = {
   approve: 'ACTIVE',
@@ -43,11 +44,9 @@ export async function moderateBusiness(businessId: string, action: keyof typeof 
     }),
   ])
 
-  revalidatePath('/admin')
+  revalidateTag(TAG.businesses, 'max')
+  revalidateTag(TAG.stats, 'max')
   revalidatePath(`/admin/commerces/${businessId}`)
-  revalidatePath('/')
-  revalidatePath('/recherche')
-  revalidatePath('/restauration')
   return { ok: true, status: nextStatus }
 }
 
@@ -89,6 +88,7 @@ export async function recordPayment(subscriptionId: string, amount: number, meth
     }),
   ])
 
+  revalidateTag(TAG.stats, 'max')
   revalidatePath(`/admin/commerces`)
   return { ok: true, invoiceNumber }
 }

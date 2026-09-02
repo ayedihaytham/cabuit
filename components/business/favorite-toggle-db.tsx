@@ -1,7 +1,6 @@
 'use client'
 
-import { useOptimistic, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useTransition } from 'react'
 import { Heart } from 'lucide-react'
 import { toggleFavorite } from '@/app/actions/engagement'
 
@@ -16,16 +15,17 @@ export function FavoriteToggleDb({
   initialFavorited: boolean
   variant?: 'icon' | 'button'
 }) {
-  const router = useRouter()
   const [pending, start] = useTransition()
-  const [fav, setFav] = useOptimistic(initialFavorited)
+  const [fav, setFav] = useState(initialFavorited)
 
-  const run = () =>
+  const run = () => {
+    const nextValue = !fav
+    setFav(nextValue) // maj immédiate
     start(async () => {
-      setFav(!fav)
-      await toggleFavorite(businessId).catch(() => {})
-      router.refresh()
+      const res = await toggleFavorite(businessId).catch(() => null)
+      if (res && res.favorited !== nextValue) setFav(res.favorited) // recale si divergence
     })
+  }
 
   if (variant === 'button') {
     return (
