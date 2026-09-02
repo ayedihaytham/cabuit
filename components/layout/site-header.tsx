@@ -2,7 +2,7 @@
 
 import { useState, type ReactNode } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Menu, X } from 'lucide-react'
+import { ArrowLeft, Menu, UserRound, X } from 'lucide-react'
 import { Logo } from '@/components/layout/logo'
 import { MARKETING_NAV } from '@/lib/constants'
 import { cn } from '@/lib/utils'
@@ -80,6 +80,13 @@ export function SiteHeader({
             {menuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
           </button>
 
+          <Link
+            href="/connexion-client"
+            className="hidden items-center gap-1.5 rounded-full border border-border px-4 py-2.5 text-sm font-semibold text-foreground transition-colors hover:border-terracotta hover:text-terracotta sm:inline-flex"
+          >
+            <UserRound className="size-4" /> Se connecter
+          </Link>
+
           {cta && (
             <Link
               href={cta.href}
@@ -99,11 +106,16 @@ export function SiteHeader({
               {link.label}
             </Link>
           ))}
-          {cta && (
-            <Link href={cta.href} onClick={() => setMenuOpen(false)} className="font-semibold text-terracotta">
-              {cta.label}
+          <div className="mt-1 flex flex-col gap-3 border-t border-border pt-4">
+            <Link href="/connexion-client" onClick={() => setMenuOpen(false)} className="inline-flex items-center gap-2 font-semibold">
+              <UserRound className="size-4" /> Se connecter
             </Link>
-          )}
+            {cta && (
+              <Link href={cta.href} onClick={() => setMenuOpen(false)} className="font-semibold text-terracotta">
+                {cta.label}
+              </Link>
+            )}
+          </div>
         </nav>
       )}
     </header>

@@ -14,8 +14,8 @@ import {
 import type { NavItem } from '@/components/app/app-shell'
 
 export const MERCHANT_NAV: NavItem[] = [
-  { key: 'etablissements', label: 'Mes établissements', href: '/dashboard', icon: Store },
-  { key: 'sponsoring', label: 'Espace sponsorisé', href: '/dashboard/espace-pub', icon: Megaphone },
+  { key: 'etablissements', label: 'Mes établissements', href: '/dashboard', icon: Store, section: 'Ma vitrine' },
+  { key: 'sponsoring', label: 'Mise en avant', href: '/dashboard/espace-pub', icon: Megaphone, section: 'Croissance' },
 ]
 
 type AdminCounts = { reviews: number; reports: number; messages: number }
@@ -24,15 +24,15 @@ export function adminNav(
   counts: AdminCounts = { reviews: 0, reports: 0, messages: 0 },
 ): NavItem[] {
   return [
-    { key: 'overview', label: 'Vue d’ensemble', href: '/admin', icon: LayoutDashboard },
-    { key: 'all', label: 'Commerces', href: '/admin?tab=all', icon: Store },
-    { key: 'clients', label: 'Clients', href: '/admin?tab=clients', icon: Users },
-    { key: 'users', label: 'Utilisateurs', href: '/admin/utilisateurs', icon: ShieldCheck },
-    { key: 'offers', label: 'Bons plans', href: '/admin?tab=offers', icon: Ticket },
-    { key: 'reviews', label: 'Avis', href: '/admin?tab=reviews', icon: Star, badge: counts.reviews },
-    { key: 'reports', label: 'Signalements', href: '/admin?tab=reports', icon: Flag, badge: counts.reports },
-    { key: 'messages', label: 'Messages', href: '/admin?tab=messages', icon: Mail, badge: counts.messages },
-    { key: 'ads', label: 'Espaces sponsorisés', href: '/admin/espaces-pub', icon: CalendarDays },
-    { key: 'journal', label: 'Journal', href: '/admin/journal', icon: ScrollText },
+    { key: 'overview', label: 'Vue d’ensemble', href: '/admin', icon: LayoutDashboard, section: 'Activité' },
+    { key: 'all', label: 'Commerces', href: '/admin?tab=all', icon: Store, section: 'Activité' },
+    { key: 'offers', label: 'Bons plans', href: '/admin?tab=offers', icon: Ticket, section: 'Activité' },
+    { key: 'clients', label: 'Clients', href: '/admin?tab=clients', icon: Users, section: 'Communauté' },
+    { key: 'users', label: 'Utilisateurs', href: '/admin/utilisateurs', icon: ShieldCheck, section: 'Communauté' },
+    { key: 'reviews', label: 'Avis', href: '/admin?tab=reviews', icon: Star, badge: counts.reviews, section: 'Communauté' },
+    { key: 'reports', label: 'Signalements', href: '/admin?tab=reports', icon: Flag, badge: counts.reports, section: 'Communauté' },
+    { key: 'messages', label: 'Messages', href: '/admin?tab=messages', icon: Mail, badge: counts.messages, section: 'Communauté' },
+    { key: 'ads', label: 'Espaces sponsorisés', href: '/admin/espaces-pub', icon: CalendarDays, section: 'Plateforme' },
+    { key: 'journal', label: 'Journal', href: '/admin/journal', icon: ScrollText, section: 'Plateforme' },
   ]
 }

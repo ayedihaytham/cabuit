@@ -29,6 +29,24 @@ const CATEGORY_OPTIONS = [
   { value: 'CAFE', label: 'Café / Salon de thé' },
 ]
 
+const TYPE_SUGGESTIONS = [
+  'Cuisine tunisienne',
+  'Cuisine méditerranéenne',
+  'Cuisine internationale',
+  'Poissons & fruits de mer',
+  'Grillades',
+  'Pizzeria',
+  'Fast-food',
+  'Street food',
+  'Pâtisserie / Salon de thé',
+  'Brunch',
+  'Café',
+  'Coffee shop',
+  'Salon de thé',
+  'Café-restaurant',
+  'Rooftop',
+]
+
 export function BusinessForm({ action, values = {}, submitLabel }: BusinessFormProps) {
   const [state, formAction, pending] = useActionState<FormState, FormData>(action, {})
   const err = (field: string) => state.fieldErrors?.[field]?.[0]
@@ -46,7 +64,23 @@ export function BusinessForm({ action, values = {}, submitLabel }: BusinessFormP
         </select>
       </label>
 
-      <Field label="Type" name="type" placeholder="Cuisine tunisienne, Salon de thé…" defaultValue={values.type} error={err('type')} required />
+      <label className="field-label">
+        Type d’établissement <span className="text-terracotta">*</span>
+        <input
+          name="type"
+          list="type-suggestions"
+          defaultValue={values.type}
+          placeholder="Choisir ou saisir…"
+          required
+          className="field-input"
+        />
+        <datalist id="type-suggestions">
+          {TYPE_SUGGESTIONS.map((t) => (
+            <option key={t} value={t} />
+          ))}
+        </datalist>
+        {err('type') && <span className="text-xs font-medium text-destructive">{err('type')}</span>}
+      </label>
 
       <label className="field-label">
         Gouvernorat <span className="text-terracotta">*</span>

@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { Cover } from '@/components/ui/cover'
-import { ArrowRight, Heart, History, LayoutGrid, MapPin, Sparkles, Ticket, UserRound } from 'lucide-react'
+import { ArrowRight, Heart, History, MapPin, Sparkles, Ticket, UserRound } from 'lucide-react'
 import { AppShell, type NavItem } from '@/components/app/app-shell'
 import { PageHead, EmptyState } from '@/components/app/ui'
 import { MemberCard } from '@/components/client/member-card'
@@ -8,6 +8,7 @@ import { FavoriteToggleDb } from '@/components/business/favorite-toggle-db'
 import { ClaimOffer } from '@/components/business/claim-offer'
 import { OfferCard } from '@/components/offers/offer-card'
 import { RegionPicker } from '@/components/region/region-picker'
+import { RegionPrompt } from '@/components/region/region-prompt'
 import { requireUser } from '@/lib/session'
 import {
   getClientCounts,
@@ -34,24 +35,29 @@ export default async function EspaceClientPage({
   const active = (TABS as readonly string[]).includes(tab ?? '') ? (tab as string) : 'bons-plans'
   const displayName = user.name ?? user.email.split('@')[0]
 
+  const region = await getPreferredRegion()
   const { memberSince, counts } = await getClientCounts(user.id)
 
   const nav: NavItem[] = [
-    { key: 'bons-plans', label: 'Bons plans', href: '/espace-client?tab=bons-plans', icon: Ticket, badge: counts.offers },
-    { key: 'mes-bons-plans', label: 'Mes bons plans', href: '/espace-client?tab=mes-bons-plans', icon: Sparkles, badge: counts.redemptions },
-    { key: 'favoris', label: 'Mes favoris', href: '/espace-client?tab=favoris', icon: Heart, badge: counts.favorites },
-    { key: 'decouvrir', label: 'Découvrir', href: '/espace-client?tab=decouvrir', icon: LayoutGrid },
-    { key: 'historique', label: 'Historique', href: '/espace-client?tab=historique', icon: History },
-    { key: 'profil', label: 'Profil', href: '/espace-client?tab=profil', icon: UserRound },
+    { key: 'bons-plans', label: 'Bons plans', href: '/espace-client?tab=bons-plans', icon: Ticket, badge: counts.offers, section: 'Mes avantages' },
+    { key: 'mes-bons-plans', label: 'Mes bons plans', href: '/espace-client?tab=mes-bons-plans', icon: Sparkles, badge: counts.redemptions, section: 'Mes avantages' },
+    { key: 'favoris', label: 'Mes favoris', href: '/espace-client?tab=favoris', icon: Heart, badge: counts.favorites, section: 'Mes avantages' },
+    { key: 'decouvrir', label: 'Autour de moi', href: '/espace-client?tab=decouvrir', icon: MapPin, section: 'Explorer' },
+    { key: 'historique', label: 'Historique', href: '/espace-client?tab=historique', icon: History, section: 'Explorer' },
+    { key: 'profil', label: 'Profil', href: '/espace-client?tab=profil', icon: UserRound, section: 'Compte' },
   ]
 
   return (
     <AppShell
       roleLabel="Espace membre"
+      accent="olive"
       userName={displayName}
       homeHref="/"
       nav={nav}
       activeKey={active}
+      headerSlot={
+        <RegionPicker current={region} currentLabel={governorateLabel(region)} variant="compact" />
+      }
       sidebarHeader={
         <MemberCard
           name={displayName}
@@ -84,18 +90,12 @@ async function OffersTab({ userId, firstName }: { userId: string; firstName: str
 
   return (
     <>
-      <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
-        <PageHead
-          eyebrow={`Bonjour ${firstName}`}
-          title="Les bons plans du moment."
-          subtitle={
-            regionLabel
-              ? `Bons plans à ${regionLabel}. Présente ton code au comptoir.`
-              : 'Récupère le bon plan, présente ton code au comptoir. Réservé aux membres Winou.'
-          }
-        />
-        <RegionPicker current={region} currentLabel={regionLabel} variant="compact" />
-      </div>
+      <PageHead
+        eyebrow={`Bonjour ${firstName}`}
+        title={regionLabel ? `Les bons plans à ${regionLabel}.` : 'Les bons plans du moment.'}
+        subtitle="Récupère le bon plan, présente ton code au comptoir. Réservé aux membres Winou."
+      />
+      {!region && <RegionPrompt />}
       {offers.length === 0 ? (
         <EmptyState
           icon={Ticket}
@@ -229,19 +229,17 @@ async function DecouvrirTab({ userId }: { userId: string }) {
   const favIds = new Set(favorites.map((f) => f.businessId))
   return (
     <>
-      <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
-        <PageHead
-          eyebrow="À explorer"
-          title="Découvrir"
-          subtitle={
-            regionLabel
-              ? `Restaurants et cafés validés à ${regionLabel}.`
-              : 'Tous les restaurants et cafés validés sur Winou.'
-          }
-        />
-        <RegionPicker current={region} currentLabel={regionLabel} variant="compact" />
-      </div>
-      {businesses.length === 0 && (
+      <PageHead
+        eyebrow="À explorer"
+        title={regionLabel ? `Autour de moi · ${regionLabel}` : 'Autour de moi'}
+        subtitle={
+          regionLabel
+            ? `Restaurants et cafés validés à ${regionLabel}.`
+            : 'Choisis ta zone pour voir les adresses près de toi.'
+        }
+      />
+      {!region && <RegionPrompt />}
+      {region && businesses.length === 0 && (
         <EmptyState icon={MapPin} text={`Aucune adresse à ${regionLabel} pour l’instant.`} />
       )}
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">

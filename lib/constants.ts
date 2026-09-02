@@ -28,6 +28,8 @@ export const CITIES = [
 export const SORT_OPTIONS = ['Pertinence', 'Proximité', 'Nouveauté', 'Note'] as const
 
 export const FOOTER_LINKS = [
+  { label: 'Se connecter', href: '/connexion-client' },
+  { label: 'Espace commerçant', href: '/connexion' },
   { label: 'À propos', href: '/a-propos' },
   { label: 'Contact', href: '/contact' },
   { label: 'CGA', href: '/cgu' },

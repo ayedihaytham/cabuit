@@ -51,6 +51,7 @@ export default async function AdminPage({
   return (
     <AppShell
       roleLabel="Administration"
+      accent="ink"
       userName={user.name ?? user.email}
       homeHref="/admin"
       nav={adminNav({ reviews: stats.reviewsPending, reports: stats.reportsOpen, messages: stats.messagesOpen })}

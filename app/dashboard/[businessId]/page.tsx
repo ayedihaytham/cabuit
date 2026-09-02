@@ -119,7 +119,11 @@ export default async function ManageBusinessPage({
           <h2 className="font-display text-2xl font-bold">Photos</h2>
           <p className="mt-1 text-sm text-muted-foreground">La première photo sert de couverture.</p>
           <div className="mt-5">
-            <PhotoManager businessId={business.id} photos={business.photos} />
+            <PhotoManager
+              businessId={business.id}
+              photos={business.photos}
+              uploadEnabled={Boolean(process.env.BLOB_READ_WRITE_TOKEN)}
+            />
           </div>
         </section>
 
@@ -163,6 +167,31 @@ export default async function ManageBusinessPage({
           )
         )}
 
+        <section className="mt-6 rounded-2xl border border-terracotta/30 bg-terracotta/5 p-5 sm:p-7">
+          <h2 className="font-display text-2xl font-bold">Bons plans</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Réduction, happy hour, menu offert, 2 pour 1… Une offre membres attire les clients Winou
+            et vous donne un trafic mesurable en boutique : ils présentent un code au comptoir.
+          </p>
+          {business.status !== 'ACTIVE' && (
+            <p className="mt-3 rounded-lg bg-ochre/15 px-3 py-2 text-xs font-medium text-ochre">
+              Préparez vos bons plans dès maintenant : ils deviennent visibles dès que la fiche est
+              validée et en ligne.
+            </p>
+          )}
+          <div className="mt-5">
+            <OfferManager businessId={business.id} offers={business.offers} />
+          </div>
+        </section>
+
+        <section className="mt-6 rounded-2xl border border-border bg-card p-5 sm:p-7">
+          <h2 className="font-display text-2xl font-bold">Menu</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Ce que verront les clients sur votre fiche.</p>
+          <div className="mt-5">
+            <MenuEditor businessId={business.id} sections={business.menuSections} />
+          </div>
+        </section>
+
         {business.status === 'ACTIVE' && (
           <>
             <section className="mt-6 rounded-2xl border border-border bg-card p-5 sm:p-7">
@@ -171,25 +200,6 @@ export default async function ManageBusinessPage({
                 <StatBox icon={Eye} n={stats.views} label="vues de la fiche" />
                 <StatBox icon={Phone} n={stats.contacts} label="clics contact" />
                 <StatBox icon={Star} n={stats.favorites} label="mises en favori" />
-              </div>
-            </section>
-
-            <section className="mt-6 rounded-2xl border border-terracotta/30 bg-terracotta/5 p-5 sm:p-7">
-              <h2 className="font-display text-2xl font-bold">Bons plans</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Une offre membres attire les clients Winou et vous donne un trafic mesurable en
-                boutique. Ils présentent un code au comptoir.
-              </p>
-              <div className="mt-5">
-                <OfferManager businessId={business.id} offers={business.offers} />
-              </div>
-            </section>
-
-            <section className="mt-6 rounded-2xl border border-border bg-card p-5 sm:p-7">
-              <h2 className="font-display text-2xl font-bold">Menu</h2>
-              <p className="mt-1 text-sm text-muted-foreground">Ce que verront les clients sur votre fiche.</p>
-              <div className="mt-5">
-                <MenuEditor businessId={business.id} sections={business.menuSections} />
               </div>
             </section>
 
