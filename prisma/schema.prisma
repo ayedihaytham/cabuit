@@ -178,6 +178,8 @@ model Business {
   verified    Boolean        @default(false)
   rating      Float          @default(0)
   reviewCount Int            @default(0)
+  /** Horaires hebdo : { mon: { closed, open, close }, ... } */
+  hours       Json?
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
 

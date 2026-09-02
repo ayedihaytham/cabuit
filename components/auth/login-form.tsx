@@ -1,11 +1,11 @@
 'use client'
 
 import { FormEvent, useState } from 'react'
+import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { signIn } from 'next-auth/react'
 import { ArrowRight } from 'lucide-react'
 import { PasswordInput } from '@/components/forms/password-input'
-import { CONTACT_EMAIL } from '@/lib/constants'
 
 type LoginFormProps = {
   /** `pro` = commerçant / admin ; `client` = client. La destination dépend du rôle du compte. */
@@ -72,12 +72,9 @@ export function LoginForm({ variant, googleEnabled = false }: LoginFormProps) {
       </label>
 
       <div className="text-right">
-        <a
-          href={`mailto:${CONTACT_EMAIL}?subject=Mot%20de%20passe%20oublié`}
-          className="text-sm font-semibold text-terracotta hover:underline"
-        >
+        <Link href="/mot-de-passe-oublie" className="text-sm font-semibold text-terracotta hover:underline">
           Mot de passe oublié ?
-        </a>
+        </Link>
       </div>
 
       {error && (

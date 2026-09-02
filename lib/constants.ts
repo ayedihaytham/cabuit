@@ -5,6 +5,14 @@ export const TAGLINE = 'Les bonnes adresses près de chez toi'
 export const CONTACT_EMAIL = 'bonjour@blayes.tn'
 export const INSTAGRAM_URL = 'https://instagram.com/blayes.tn'
 
+/** Coordonnées de règlement par virement. TODO(finance) : valeurs réelles. */
+export const BANK_DETAILS = {
+  holder: 'Blayes SARL',
+  bank: 'À compléter',
+  rib: '00 000 0000000000000 00',
+  iban: 'TN00 0000 0000 0000 0000 0000',
+}
+
 /** Blayes regroupe uniquement des restaurants et des cafés / salons de thé. */
 export const CATEGORIES: Category[] = ['Restauration', 'Cafés & salons de thé']
 

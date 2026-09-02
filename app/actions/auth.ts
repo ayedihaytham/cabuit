@@ -5,6 +5,7 @@ import bcrypt from 'bcryptjs'
 import { signIn } from '@/auth'
 import { db } from '@/lib/db'
 import { signupClientSchema } from '@/lib/validations'
+import { sendEmail, layout, appUrl } from '@/lib/email'
 
 export type SignupState = { error?: string; fieldErrors?: Record<string, string[]> }
 
@@ -35,6 +36,20 @@ async function createAccount(
   })
 
   await db.event.create({ data: { type: 'SIGNUP' } }).catch(() => {})
+
+  void sendEmail({
+    to: email,
+    subject: `Bienvenue sur Blayes${role === 'MERCHANT' ? ' — inscrivez votre établissement' : ''} !`,
+    html: layout(
+      `Bienvenue ${name} 👋`,
+      role === 'MERCHANT'
+        ? `<p>Votre compte commerçant est créé. Ajoutez votre restaurant ou café,
+           choisissez une offre et envoyez la fiche à validation.</p>`
+        : `<p>Votre compte est créé. Récupérez des bons plans, gardez vos adresses
+           favorites et présentez votre code au comptoir.</p>`,
+      { href: `${appUrl()}${redirectTo}`, label: 'Commencer' },
+    ),
+  })
 
   try {
     await signIn('credentials', { email, password, redirectTo })

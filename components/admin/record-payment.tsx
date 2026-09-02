@@ -3,6 +3,32 @@
 import { FormEvent, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { recordPayment } from '@/app/actions/admin'
+import { confirmPayment } from '@/app/actions/payment'
+
+export function ConfirmPaymentButton({ paymentId }: { paymentId: string }) {
+  const [pending, start] = useTransition()
+  const [msg, setMsg] = useState('')
+  const router = useRouter()
+  return (
+    <span className="inline-flex items-center gap-2">
+      <button
+        type="button"
+        disabled={pending}
+        onClick={() =>
+          start(async () => {
+            const res = await confirmPayment(paymentId)
+            setMsg(res.error ?? `Confirmé (${res.invoiceNumber})`)
+            router.refresh()
+          })
+        }
+        className="rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground disabled:opacity-60"
+      >
+        {pending ? '…' : 'Confirmer le paiement'}
+      </button>
+      {msg && <span className="text-xs text-olive">{msg}</span>}
+    </span>
+  )
+}
 
 export function RecordPayment({
   subscriptionId,

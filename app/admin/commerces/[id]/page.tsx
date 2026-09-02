@@ -4,7 +4,7 @@ import { ArrowLeft, ExternalLink, Mail, Phone } from 'lucide-react'
 import { AppShell } from '@/components/app/app-shell'
 import { adminNav } from '@/lib/nav'
 import { ModerationActions } from '@/components/admin/moderation-actions'
-import { RecordPayment } from '@/components/admin/record-payment'
+import { RecordPayment, ConfirmPaymentButton } from '@/components/admin/record-payment'
 import { requireUser } from '@/lib/session'
 import { getAdminStats, getBusinessForAdmin } from '@/lib/queries'
 import { BUSINESS_STATUS_LABELS, SUB_STATUS_LABELS, CATEGORY_LABELS } from '@/lib/status'
@@ -119,7 +119,23 @@ export default async function AdminBusinessPage({ params }: { params: Promise<{ 
                   )}
                 </dl>
 
-                <h3 className="mt-5 text-sm font-bold">Enregistrer un paiement</h3>
+                {b.subscription.payments.some((p) => p.status === 'PENDING') && (
+                  <div className="mt-5 space-y-2">
+                    <h3 className="text-sm font-bold text-ochre">Virements déclarés à vérifier</h3>
+                    {b.subscription.payments
+                      .filter((p) => p.status === 'PENDING')
+                      .map((p) => (
+                        <div key={p.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-ochre/10 p-3 text-sm">
+                          <span>
+                            {p.amount} DT · réf. {p.reference ?? '—'}
+                          </span>
+                          <ConfirmPaymentButton paymentId={p.id} />
+                        </div>
+                      ))}
+                  </div>
+                )}
+
+                <h3 className="mt-5 text-sm font-bold">Enregistrer un paiement (manuel)</h3>
                 <div className="mt-2">
                   <RecordPayment subscriptionId={b.subscription.id} defaultAmount={b.subscription.pricePerYear} />
                 </div>
@@ -128,7 +144,7 @@ export default async function AdminBusinessPage({ params }: { params: Promise<{ 
                   <ul className="mt-4 space-y-1 text-xs text-muted-foreground">
                     {b.subscription.payments.map((p) => (
                       <li key={p.id} className="flex justify-between">
-                        <span>{p.invoiceNumber} · {p.method}</span>
+                        <span>{p.invoiceNumber ?? p.reference ?? '—'} · {p.method}</span>
                         <span>{p.amount} DT · {p.status}</span>
                       </li>
                     ))}

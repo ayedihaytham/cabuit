@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
+import { Cover } from '@/components/ui/cover'
 import { ArrowRight, ChevronRight, Coffee, MapPin, Sparkles, Utensils } from 'lucide-react'
 import { SiteHeader } from '@/components/layout/site-header'
 import { SiteFooter } from '@/components/layout/site-footer'
@@ -172,12 +173,11 @@ export default async function HomePage() {
               className="group overflow-hidden rounded-2xl border border-border bg-card transition-shadow hover:shadow-[0_14px_36px_rgba(53,41,30,0.12)]"
             >
               <div className="relative aspect-[1.15] overflow-hidden">
-                <Image
+                <Cover
                   src={business.image}
                   alt={business.name}
-                  fill
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  className="transition-transform duration-500 group-hover:scale-105"
                 />
                 {business.tag && (
                   <span className="absolute left-3 top-3 rounded-full bg-sand px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-foreground">

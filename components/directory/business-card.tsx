@@ -1,6 +1,6 @@
 import Link from 'next/link'
-import Image from 'next/image'
 import { Check, MapPin, Star } from 'lucide-react'
+import { Cover } from '@/components/ui/cover'
 import type { Business } from '@/lib/types'
 
 type BusinessCardProps = {
@@ -15,13 +15,12 @@ export function BusinessCard({ business, showDescription = false, priority = fal
     <article className="group overflow-hidden rounded-2xl border border-border bg-card transition-shadow hover:shadow-[0_14px_36px_rgba(53,41,30,0.12)]">
       <Link href={`/commerce/${business.slug}`} className="block">
         <div className="relative aspect-[1.4] overflow-hidden">
-          <Image
+          <Cover
             src={business.image}
             alt={business.name}
-            fill
             sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
             priority={priority}
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            className="transition-transform duration-500 group-hover:scale-105"
           />
           {business.verified && (
             <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-sand px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-olive">

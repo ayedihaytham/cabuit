@@ -5,6 +5,7 @@ import type { BusinessStatus } from '@prisma/client'
 import { db } from '@/lib/db'
 import { requireUser } from '@/lib/session'
 import { TAG } from '@/lib/queries'
+import { sendEmail, layout, appUrl } from '@/lib/email'
 
 const TRANSITIONS: Record<string, BusinessStatus> = {
   approve: 'ACTIVE',
@@ -21,7 +22,7 @@ export async function moderateBusiness(businessId: string, action: keyof typeof 
 
   const business = await db.business.findUnique({
     where: { id: businessId },
-    include: { subscription: true },
+    include: { subscription: true, owner: { select: { email: true, name: true } } },
   })
   if (!business) return { error: 'Commerce introuvable.' }
 
@@ -43,6 +44,31 @@ export async function moderateBusiness(businessId: string, action: keyof typeof 
       },
     }),
   ])
+
+  if (action === 'approve') {
+    void sendEmail({
+      to: business.owner.email,
+      subject: `${business.name} est en ligne sur Blayes 🎉`,
+      html: layout(
+        'Votre fiche est validée',
+        `<p>Bonjour ${business.owner.name ?? ''},</p>
+         <p><strong>${business.name}</strong> est désormais visible par tous les membres Blayes.
+         Pensez à ajouter vos photos et à publier un bon plan pour attirer vos premiers clients.</p>`,
+        { href: `${appUrl()}/dashboard`, label: 'Ouvrir mon tableau de bord' },
+      ),
+    })
+  } else if (action === 'reject') {
+    void sendEmail({
+      to: business.owner.email,
+      subject: `Votre fiche ${business.name} nécessite des corrections`,
+      html: layout(
+        'Fiche à corriger',
+        `<p>Votre fiche <strong>${business.name}</strong> n'a pas pu être validée. Corrigez les
+         informations depuis votre tableau de bord et renvoyez-la.</p>`,
+        { href: `${appUrl()}/dashboard`, label: 'Corriger ma fiche' },
+      ),
+    })
+  }
 
   revalidateTag(TAG.businesses, 'max')
   revalidateTag(TAG.stats, 'max')

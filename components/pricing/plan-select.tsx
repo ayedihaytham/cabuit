@@ -97,14 +97,14 @@ export function PlanSelect() {
 
             {isSelected && (
               <Link
-                href={`/paiement?offre=${encodeURIComponent(plan.name)}`}
+                href="/inscription"
                 className={`mt-3 block w-full rounded-full border px-5 py-3 text-center text-sm font-semibold transition ${
                   plan.popular
                     ? 'border-primary-foreground/40 text-primary-foreground hover:bg-primary-foreground/10'
                     : 'border-border text-foreground hover:bg-secondary'
                 }`}
               >
-                Continuer vers le paiement
+                Créer mon compte commerçant
               </Link>
             )}
           </article>

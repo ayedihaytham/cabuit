@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import Image from 'next/image'
+import { Cover } from '@/components/ui/cover'
 import { notFound } from 'next/navigation'
 import { ArrowLeft, Check, MapPin, MessageCircle, Phone, Star } from 'lucide-react'
 import { SiteHeader } from '@/components/layout/site-header'
@@ -11,10 +11,13 @@ import { ReportButton } from '@/components/business/report-button'
 import { ContactLink } from '@/components/business/contact-link'
 import { ClaimOffer } from '@/components/business/claim-offer'
 import { OfferCard } from '@/components/offers/offer-card'
+import { OpeningHours } from '@/components/business/opening-hours'
+import { MiniMap } from '@/components/business/mini-map'
 import { getPublicBusiness } from '@/lib/queries'
 import { getSessionUser } from '@/lib/session'
 import { db } from '@/lib/db'
 import { CATEGORY_LABELS } from '@/lib/status'
+import type { WeekHours } from '@/lib/hours'
 
 export const dynamic = 'force-dynamic'
 
@@ -66,7 +69,7 @@ export default async function CommercePage({ params }: { params: Promise<{ slug:
         </Link>
 
         <div className="relative mt-4 aspect-[2.2] overflow-hidden rounded-3xl bg-secondary">
-          <Image src={cover} alt={business.name} fill priority sizes="(max-width: 1024px) 100vw, 1024px" className="object-cover" />
+          <Cover src={cover} alt={business.name} priority sizes="(max-width: 1024px) 100vw, 1024px" />
         </div>
 
         <div className="mt-6 flex flex-wrap items-center gap-3">
@@ -113,6 +116,15 @@ export default async function CommercePage({ params }: { params: Promise<{ slug:
             />
           )}
         </div>
+
+        {(business.hours || (business.lat && business.lng)) && (
+          <section className="mt-10 grid gap-5 sm:grid-cols-2">
+            {business.hours && <OpeningHours hours={business.hours as WeekHours} />}
+            {business.lat && business.lng && (
+              <MiniMap lat={business.lat} lng={business.lng} label={business.name} />
+            )}
+          </section>
+        )}
 
         {business.offers.length > 0 && (
           <section className="mt-12 border-t border-border pt-10">

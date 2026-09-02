@@ -1,17 +1,20 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ArrowLeft, ExternalLink, Eye, Phone, Star } from 'lucide-react'
+import { ArrowLeft, CreditCard, ExternalLink, Eye, Phone, Star } from 'lucide-react'
 import { AppShell } from '@/components/app/app-shell'
 import { MERCHANT_NAV } from '@/lib/nav'
 import { BusinessForm } from '@/components/dashboard/business-form'
 import { SubmitForReview } from '@/components/dashboard/submit-for-review'
 import { MenuEditor } from '@/components/dashboard/menu-editor'
 import { OfferManager } from '@/components/dashboard/offer-manager'
+import { PhotoManager } from '@/components/dashboard/photo-manager'
+import { LocationHoursForm } from '@/components/dashboard/location-hours-form'
 import { ReviewReply } from '@/components/dashboard/review-reply'
 import { updateBusiness, submitBusiness } from '@/app/actions/business'
 import { requireMerchant } from '@/lib/session'
 import { getOwnedBusiness, getBusinessStats } from '@/lib/queries'
 import { BUSINESS_STATUS_LABELS, SUB_STATUS_LABELS } from '@/lib/status'
+import type { WeekHours } from '@/lib/hours'
 
 export const dynamic = 'force-dynamic'
 
@@ -73,6 +76,25 @@ export default async function ManageBusinessPage({
           </p>
         )}
 
+        {business.subscription &&
+          (business.subscription.status === 'TRIALING' ||
+            business.subscription.status === 'PENDING_PAYMENT' ||
+            business.subscription.status === 'PAST_DUE') && (
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-terracotta/30 bg-terracotta/5 px-4 py-3 text-sm">
+              <span className="font-medium">
+                {business.subscription.status === 'TRIALING'
+                  ? `Essai gratuit${business.subscription.trialEndsAt ? ` jusqu’au ${new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' }).format(business.subscription.trialEndsAt)}` : ''}.`
+                  : 'Le règlement de votre abonnement est attendu pour rester en ligne.'}
+              </span>
+              <Link
+                href={`/paiement?business=${business.id}`}
+                className="inline-flex items-center gap-2 rounded-full bg-terracotta px-4 py-2 text-xs font-bold text-primary-foreground"
+              >
+                <CreditCard className="size-3.5" /> Régler l’abonnement
+              </Link>
+            </div>
+          )}
+
         <section className="mt-8 rounded-2xl border border-border bg-card p-5 sm:p-7">
           <h2 className="mb-5 font-display text-2xl font-bold">Informations</h2>
           <BusinessForm
@@ -90,6 +112,26 @@ export default async function ManageBusinessPage({
               instagram: business.instagram ?? '',
             }}
           />
+        </section>
+
+        <section className="mt-6 rounded-2xl border border-border bg-card p-5 sm:p-7">
+          <h2 className="font-display text-2xl font-bold">Photos</h2>
+          <p className="mt-1 text-sm text-muted-foreground">La première photo sert de couverture.</p>
+          <div className="mt-5">
+            <PhotoManager businessId={business.id} photos={business.photos} />
+          </div>
+        </section>
+
+        <section className="mt-6 rounded-2xl border border-border bg-card p-5 sm:p-7">
+          <h2 className="font-display text-2xl font-bold">Localisation & horaires</h2>
+          <div className="mt-5">
+            <LocationHoursForm
+              businessId={business.id}
+              lat={business.lat}
+              lng={business.lng}
+              hours={business.hours as WeekHours | null}
+            />
+          </div>
         </section>
 
         {canSubmit ? (
