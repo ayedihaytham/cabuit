@@ -222,3 +222,123 @@ export function ReportRows({ rows }: { rows: ReportRow[] }) {
     </div>
   )
 }
+
+/* ---------- Bons plans (modération admin) ---------- */
+
+type OfferRow = {
+  id: string
+  title: string
+  discountLabel: string
+  status: string
+  redemptionCount: number
+  business: { name: string; slug: string }
+}
+
+export function OfferRows({ rows }: { rows: OfferRow[] }) {
+  const [removed, setRemoved] = useState<Set<string>>(new Set())
+  const [statuses, setStatuses] = useState<Record<string, string>>({})
+  const [busy, setBusy] = useState<string | null>(null)
+  const [, start] = useTransition()
+  const visible = rows.filter((r) => !removed.has(r.id))
+
+  const act = (id: string, action: 'pause' | 'activate' | 'remove') => {
+    setBusy(id)
+    start(async () => {
+      const { adminModerateOffer } = await import('@/app/actions/admin')
+      await adminModerateOffer(id, action)
+      if (action === 'remove') setRemoved((s) => new Set(s).add(id))
+      else setStatuses((s) => ({ ...s, [id]: action === 'pause' ? 'PAUSED' : 'ACTIVE' }))
+      setBusy(null)
+    })
+  }
+
+  if (visible.length === 0) {
+    return <p className="rounded-3xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">Aucun bon plan.</p>
+  }
+
+  return (
+    <div className="overflow-hidden rounded-3xl border border-border bg-card">
+      <div className="divide-y divide-border">
+        {visible.map((o) => {
+          const status = statuses[o.id] ?? o.status
+          return (
+            <div key={o.id} className="flex flex-col gap-2 p-5 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-semibold">
+                  {o.title} · <span className="text-terracotta">{o.discountLabel}</span>
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  <Link href={`/commerce/${o.business.slug}`} className="hover:text-terracotta">{o.business.name}</Link>
+                  {' · '}{o.redemptionCount} récupérés · {status === 'ACTIVE' ? 'actif' : status.toLowerCase()}
+                </p>
+              </div>
+              <div className="flex gap-2">
+                {status === 'ACTIVE' ? (
+                  <button type="button" disabled={busy === o.id} onClick={() => act(o.id, 'pause')} className={`${BTN} border border-border hover:bg-muted`}>
+                    Suspendre
+                  </button>
+                ) : (
+                  <button type="button" disabled={busy === o.id} onClick={() => act(o.id, 'activate')} className={`${BTN} bg-primary text-primary-foreground`}>
+                    Réactiver
+                  </button>
+                )}
+                <button type="button" disabled={busy === o.id} onClick={() => act(o.id, 'remove')} className={`${BTN} border border-destructive/40 text-destructive hover:bg-destructive/10`}>
+                  Supprimer
+                </button>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+/* ---------- Messages de contact ---------- */
+
+type MessageRow = { id: string; name: string; email: string; message: string; createdAt: Date }
+
+export function MessageRows({ rows }: { rows: MessageRow[] }) {
+  const [done, setDone] = useState<Set<string>>(new Set())
+  const [busy, setBusy] = useState<string | null>(null)
+  const [, start] = useTransition()
+  const visible = rows.filter((r) => !done.has(r.id))
+
+  const handle = (id: string) => {
+    setBusy(id)
+    start(async () => {
+      const { markContactHandled } = await import('@/app/actions/admin')
+      await markContactHandled(id)
+      setDone((d) => new Set(d).add(id))
+      setBusy(null)
+    })
+  }
+
+  if (visible.length === 0) {
+    return <p className="rounded-3xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">Aucun message en attente.</p>
+  }
+
+  return (
+    <div className="overflow-hidden rounded-3xl border border-border bg-card">
+      <div className="divide-y divide-border">
+        {visible.map((m) => (
+          <div key={m.id} className="flex flex-col gap-2 p-5">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-sm font-semibold">
+                {m.name} ·{' '}
+                <a href={`mailto:${m.email}`} className="text-terracotta hover:underline">{m.email}</a>
+              </p>
+              <span className="text-xs text-muted-foreground">
+                {new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }).format(m.createdAt)}
+              </span>
+            </div>
+            <p className="text-sm text-muted-foreground">{m.message}</p>
+            <button type="button" disabled={busy === m.id} onClick={() => handle(m.id)} className={`${BTN} w-fit bg-primary text-primary-foreground`}>
+              {busy === m.id ? <Spinner className="size-4" /> : 'Marquer traité'}
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}

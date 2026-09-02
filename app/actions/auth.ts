@@ -6,6 +6,7 @@ import { signIn } from '@/auth'
 import { db } from '@/lib/db'
 import { signupClientSchema } from '@/lib/validations'
 import { sendEmail, layout, appUrl } from '@/lib/email'
+import { guard } from '@/lib/rate-limit'
 
 export type SignupState = { error?: string; fieldErrors?: Record<string, string[]> }
 
@@ -14,6 +15,9 @@ async function createAccount(
   role: 'CLIENT' | 'MERCHANT',
   redirectTo: string,
 ): Promise<SignupState> {
+  const limited = await guard(`signup:${role}`, 5, 60 * 60 * 1000)
+  if (limited) return limited
+
   const parsed = signupClientSchema.safeParse(Object.fromEntries(formData))
   if (!parsed.success) {
     return { fieldErrors: parsed.error.flatten().fieldErrors }

@@ -19,7 +19,7 @@ export default async function JournalPage() {
       roleLabel="Administration"
       userName={user.name ?? user.email}
       homeHref="/admin"
-      nav={adminNav({ reviews: stats.reviewsPending, reports: stats.reportsOpen })}
+      nav={adminNav({ reviews: stats.reviewsPending, reports: stats.reportsOpen, messages: stats.messagesOpen })}
       activeKey="journal"
     >
       <PageHead

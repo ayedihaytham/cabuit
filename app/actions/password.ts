@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { db } from '@/lib/db'
 import { createResetToken, consumeResetToken } from '@/lib/tokens'
 import { sendEmail, layout, appUrl } from '@/lib/email'
+import { guard } from '@/lib/rate-limit'
 
 export type ResetState = { error?: string; ok?: boolean }
 
@@ -16,6 +17,8 @@ const newPwdSchema = z.object({
 
 /** Demande de réinitialisation — réponse toujours « ok » (ne révèle pas l'existence du compte). */
 export async function requestReset(_prev: ResetState, formData: FormData): Promise<ResetState> {
+  const limited = await guard('reset', 5, 60 * 60 * 1000)
+  if (limited) return limited
   const parsed = emailSchema.safeParse(Object.fromEntries(formData))
   if (!parsed.success) return { error: parsed.error.issues[0].message }
   const { email } = parsed.data

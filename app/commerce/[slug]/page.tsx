@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Cover } from '@/components/ui/cover'
 import { notFound } from 'next/navigation'
 import { ArrowLeft, Check, MapPin, MessageCircle, Phone, Star } from 'lucide-react'
+import { Cover } from '@/components/ui/cover'
 import { SiteHeader } from '@/components/layout/site-header'
 import { SiteFooter } from '@/components/layout/site-footer'
 import { FavoriteToggleDb } from '@/components/business/favorite-toggle-db'
@@ -16,8 +16,19 @@ import { MiniMap } from '@/components/business/mini-map'
 import { getPublicBusiness } from '@/lib/queries'
 import { getSessionUser } from '@/lib/session'
 import { db } from '@/lib/db'
+import { appUrl } from '@/lib/email'
 import { CATEGORY_LABELS } from '@/lib/status'
-import type { WeekHours } from '@/lib/hours'
+import { DAYS, type DayKey, type WeekHours } from '@/lib/hours'
+
+const SCHEMA_DAY: Record<DayKey, string> = {
+  mon: 'Monday',
+  tue: 'Tuesday',
+  wed: 'Wednesday',
+  thu: 'Thursday',
+  fri: 'Friday',
+  sat: 'Saturday',
+  sun: 'Sunday',
+}
 
 export const dynamic = 'force-dynamic'
 
@@ -56,8 +67,52 @@ export default async function CommercePage({ params }: { params: Promise<{ slug:
       ? business.reviews.reduce((s, r) => s + r.rating, 0) / business.reviews.length
       : business.rating
 
+  const hours = business.hours as WeekHours | null
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': business.category === 'RESTAURANT' ? 'Restaurant' : 'CafeOrCoffeeShop',
+    name: business.name,
+    description: business.description,
+    url: `${appUrl()}/commerce/${business.slug}`,
+    image: cover.startsWith('http') ? cover : `${appUrl()}${cover}`,
+    address: { '@type': 'PostalAddress', streetAddress: business.address, addressLocality: business.city, addressCountry: 'TN' },
+    ...(business.phone ? { telephone: business.phone } : {}),
+    ...(business.lat && business.lng
+      ? { geo: { '@type': 'GeoCoordinates', latitude: business.lat, longitude: business.lng } }
+      : {}),
+    ...(business.reviews.length > 0
+      ? {
+          aggregateRating: {
+            '@type': 'AggregateRating',
+            ratingValue: Number(avg.toFixed(1)),
+            reviewCount: business.reviews.length,
+          },
+        }
+      : {}),
+    ...(hours
+      ? {
+          openingHoursSpecification: DAYS.filter((d) => hours[d.key] && !hours[d.key].closed).map((d) => ({
+            '@type': 'OpeningHoursSpecification',
+            dayOfWeek: SCHEMA_DAY[d.key],
+            opens: hours[d.key].open,
+            closes: hours[d.key].close,
+          })),
+        }
+      : {}),
+    ...(business.offers.length > 0
+      ? {
+          makesOffer: business.offers.map((o) => ({
+            '@type': 'Offer',
+            name: o.title,
+            description: o.discountLabel,
+          })),
+        }
+      : {}),
+  }
+
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <SiteHeader />
 
       <main className="mx-auto max-w-5xl px-5 py-8 lg:px-8 lg:py-12">

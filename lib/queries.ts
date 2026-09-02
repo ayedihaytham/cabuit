@@ -45,6 +45,15 @@ async function _listActiveBusinesses(options: {
   })
 }
 
+/** Slugs des fiches en ligne — pour le sitemap. */
+export async function listBusinessSlugs() {
+  return db.business.findMany({
+    where: { status: 'ACTIVE' },
+    select: { slug: true, updatedAt: true },
+    orderBy: { updatedAt: 'desc' },
+  })
+}
+
 export async function getPublicBusiness(slug: string) {
   return db.business.findFirst({
     where: { slug, status: 'ACTIVE' },
@@ -236,6 +245,7 @@ async function _getAdminStats() {
     reportsOpen,
     offersActive,
     redemptions30d,
+    messagesOpen,
   ] = await Promise.all([
     db.user.count({ where: { role: 'CLIENT' } }),
     db.user.count({ where: { role: 'MERCHANT' } }),
@@ -251,6 +261,7 @@ async function _getAdminStats() {
     db.report.count({ where: { status: 'OPEN' } }),
     db.offer.count({ where: { status: 'ACTIVE' } }),
     db.offerRedemption.count({ where: { createdAt: { gte: since } } }),
+    db.contactMessage.count({ where: { handled: false } }),
   ])
 
   const statusMap = Object.fromEntries(
@@ -276,6 +287,7 @@ async function _getAdminStats() {
     reportsOpen,
     offersActive,
     redemptions30d,
+    messagesOpen,
   }
 }
 
@@ -331,6 +343,22 @@ export async function getAuditLog() {
     orderBy: { createdAt: 'desc' },
     take: 100,
     include: { actor: { select: { name: true, email: true } } },
+  })
+}
+
+export async function listAllOffers() {
+  return db.offer.findMany({
+    orderBy: { createdAt: 'desc' },
+    take: 200,
+    include: { business: { select: { name: true, slug: true } } },
+  })
+}
+
+export async function listContactMessages(handled = false) {
+  return db.contactMessage.findMany({
+    where: { handled },
+    orderBy: { createdAt: 'desc' },
+    take: 100,
   })
 }
 

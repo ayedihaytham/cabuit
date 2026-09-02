@@ -141,3 +141,39 @@ export async function submitBusiness(businessId: string, _prev: FormState, formD
   revalidateTag(TAG.stats, 'max')
   redirect('/dashboard?submitted=1')
 }
+
+/** Édition d'une fiche par un ADMIN (pour corriger un abonné). */
+export async function adminUpdateBusiness(
+  businessId: string,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const admin = await requireUser(['ADMIN'])
+
+  const parsed = businessSchema.safeParse(Object.fromEntries(formData))
+  if (!parsed.success) return { fieldErrors: parsed.error.flatten().fieldErrors }
+  const d = parsed.data
+
+  const biz = await db.business.update({
+    where: { id: businessId },
+    data: {
+      name: d.name,
+      category: d.category,
+      type: d.type,
+      city: d.city,
+      address: d.address,
+      description: d.description,
+      phone: d.phone || null,
+      whatsapp: d.whatsapp || null,
+      instagram: d.instagram || null,
+    },
+  })
+  await db.auditLog.create({
+    data: { actorId: admin.id, action: 'business.edit', entity: 'Business', entityId: businessId },
+  })
+
+  revalidateTag(TAG.businesses, 'max')
+  revalidatePath(`/admin/commerces/${businessId}`)
+  revalidatePath(`/commerce/${biz.slug}`)
+  return { ok: true }
+}

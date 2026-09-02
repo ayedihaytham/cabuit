@@ -5,6 +5,7 @@ import { TAG } from '@/lib/queries'
 import { z } from 'zod'
 import { db } from '@/lib/db'
 import { requireUser, getSessionUser } from '@/lib/session'
+import { guard } from '@/lib/rate-limit'
 
 // ------------------------------------------------------------------
 // Favoris (client)
@@ -149,6 +150,8 @@ export async function submitReport(
   _prev: ReportState,
   formData: FormData,
 ): Promise<ReportState> {
+  const limited = await guard('report', 10, 60 * 60 * 1000)
+  if (limited) return limited
   const user = await getSessionUser()
   const reason = String(formData.get('reason') ?? '').trim()
   const detail = String(formData.get('detail') ?? '').trim()

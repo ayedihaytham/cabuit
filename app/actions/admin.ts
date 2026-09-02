@@ -118,3 +118,46 @@ export async function recordPayment(subscriptionId: string, amount: number, meth
   revalidatePath(`/admin/commerces`)
   return { ok: true, invoiceNumber }
 }
+
+// ------------------------------------------------------------------
+// Modération des bons plans
+// ------------------------------------------------------------------
+
+export async function adminModerateOffer(offerId: string, action: 'pause' | 'activate' | 'remove') {
+  const admin = await requireUser(['ADMIN'])
+  const offer = await db.offer.findUnique({
+    where: { id: offerId },
+    include: { business: { select: { slug: true } } },
+  })
+  if (!offer) return { error: 'Bon plan introuvable.' }
+
+  if (action === 'remove') {
+    await db.offer.delete({ where: { id: offerId } })
+  } else {
+    await db.offer.update({
+      where: { id: offerId },
+      data: { status: action === 'pause' ? 'PAUSED' : 'ACTIVE' },
+    })
+  }
+  await db.auditLog.create({
+    data: { actorId: admin.id, action: `offer.${action}`, entity: 'Offer', entityId: offerId },
+  })
+
+  revalidateTag(TAG.offers, 'max')
+  revalidateTag(TAG.stats, 'max')
+  revalidatePath(`/commerce/${offer.business.slug}`)
+  revalidatePath('/admin')
+  return { ok: true }
+}
+
+// ------------------------------------------------------------------
+// Messages de contact
+// ------------------------------------------------------------------
+
+export async function markContactHandled(id: string) {
+  await requireUser(['ADMIN'])
+  await db.contactMessage.update({ where: { id }, data: { handled: true } })
+  revalidateTag(TAG.stats, 'max')
+  revalidatePath('/admin')
+  return { ok: true }
+}

@@ -7,6 +7,7 @@ import bcrypt from 'bcryptjs'
 import { z } from 'zod'
 import { db } from '@/lib/db'
 import { authConfig } from '@/auth.config'
+import { rateLimit, clientIp } from '@/lib/rate-limit'
 
 const credentialsSchema = z.object({
   email: z.string().email(),
@@ -18,6 +19,10 @@ const providers: Provider[] = [
     async authorize(raw) {
       const parsed = credentialsSchema.safeParse(raw)
       if (!parsed.success) return null
+
+      // Anti brute-force : 10 tentatives / 10 min / IP
+      const ip = await clientIp()
+      if (!rateLimit(`login:${ip}`, 10, 10 * 60 * 1000).ok) return null
 
       const user = await db.user.findUnique({
         where: { email: parsed.data.email.toLowerCase() },

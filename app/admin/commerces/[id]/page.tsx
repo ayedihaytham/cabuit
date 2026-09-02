@@ -5,6 +5,8 @@ import { AppShell } from '@/components/app/app-shell'
 import { adminNav } from '@/lib/nav'
 import { ModerationActions } from '@/components/admin/moderation-actions'
 import { RecordPayment, ConfirmPaymentButton } from '@/components/admin/record-payment'
+import { BusinessForm } from '@/components/dashboard/business-form'
+import { adminUpdateBusiness } from '@/app/actions/business'
 import { requireUser } from '@/lib/session'
 import { getAdminStats, getBusinessForAdmin } from '@/lib/queries'
 import { BUSINESS_STATUS_LABELS, SUB_STATUS_LABELS, CATEGORY_LABELS } from '@/lib/status'
@@ -34,7 +36,7 @@ export default async function AdminBusinessPage({ params }: { params: Promise<{ 
       roleLabel="Administration"
       userName={user.name ?? user.email}
       homeHref="/admin"
-      nav={adminNav({ reviews: stats.reviewsPending, reports: stats.reportsOpen })}
+      nav={adminNav({ reviews: stats.reviewsPending, reports: stats.reportsOpen, messages: stats.messagesOpen })}
       activeKey="all"
     >
       <div className="mx-auto max-w-4xl">
@@ -156,6 +158,27 @@ export default async function AdminBusinessPage({ params }: { params: Promise<{ 
             )}
           </section>
         </div>
+
+        <details className="mt-6 rounded-2xl border border-border bg-card p-5">
+          <summary className="cursor-pointer font-display text-xl font-bold">Éditer la fiche</summary>
+          <div className="mt-4">
+            <BusinessForm
+              action={adminUpdateBusiness.bind(null, b.id)}
+              submitLabel="Enregistrer les corrections"
+              values={{
+                name: b.name,
+                category: b.category,
+                type: b.type,
+                city: b.city,
+                address: b.address,
+                description: b.description,
+                phone: b.phone ?? '',
+                whatsapp: b.whatsapp ?? '',
+                instagram: b.instagram ?? '',
+              }}
+            />
+          </div>
+        </details>
       </div>
     </AppShell>
   )

@@ -5,6 +5,7 @@ import { TAG } from '@/lib/queries'
 import { z } from 'zod'
 import { db } from '@/lib/db'
 import { requireUser, requireMerchant } from '@/lib/session'
+import { guard } from '@/lib/rate-limit'
 
 export type OfferState = { error?: string; ok?: boolean }
 
@@ -129,8 +130,12 @@ export async function markRedemptionUsed(code: string) {
 // ------------------------------------------------------------------
 
 /** Le client récupère un bon plan : crée sa récupération + un code unique. */
-export async function claimOffer(offerId: string) {
+export async function claimOffer(
+  offerId: string,
+): Promise<{ error?: string; ok?: boolean; code?: string }> {
   const user = await requireUser(['CLIENT'])
+  const limited = await guard('claim', 20, 60 * 60 * 1000)
+  if (limited) return limited
 
   const offer = await db.offer.findUnique({
     where: { id: offerId },

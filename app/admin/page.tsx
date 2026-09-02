@@ -1,8 +1,14 @@
-import { Users, Store, TrendingUp, Clock, Star, Flag, Ticket } from 'lucide-react'
+import { Users, Store, TrendingUp, Clock, Star, Flag, Ticket, Mail } from 'lucide-react'
 import { AppShell } from '@/components/app/app-shell'
 import { PageHead } from '@/components/app/ui'
 import { adminNav } from '@/lib/nav'
-import { BusinessRows, ReviewRows, ReportRows } from '@/components/admin/moderation-tables'
+import {
+  BusinessRows,
+  ReviewRows,
+  ReportRows,
+  OfferRows,
+  MessageRows,
+} from '@/components/admin/moderation-tables'
 import { requireUser } from '@/lib/session'
 import {
   getAdminStats,
@@ -10,17 +16,21 @@ import {
   listClientsForAdmin,
   listPendingReviews,
   listReports,
+  listAllOffers,
+  listContactMessages,
 } from '@/lib/queries'
 
 export const dynamic = 'force-dynamic'
 
-type TabKey = 'overview' | 'all' | 'clients' | 'reviews' | 'reports'
+type TabKey = 'overview' | 'all' | 'clients' | 'offers' | 'reviews' | 'reports' | 'messages'
 const TAB_TITLES: Record<TabKey, string> = {
   overview: 'À valider',
   all: 'Tous les commerces',
   clients: 'Clients inscrits',
+  offers: 'Bons plans publiés',
   reviews: 'Avis à modérer',
   reports: 'Signalements',
+  messages: 'Messages de contact',
 }
 
 export default async function AdminPage({
@@ -30,7 +40,9 @@ export default async function AdminPage({
 }) {
   const user = await requireUser(['ADMIN'])
   const { tab } = await searchParams
-  const active: TabKey = (['all', 'clients', 'reviews', 'reports'].includes(tab ?? '')
+  const active: TabKey = ((
+    ['all', 'clients', 'offers', 'reviews', 'reports', 'messages'] as string[]
+  ).includes(tab ?? '')
     ? tab
     : 'overview') as TabKey
 
@@ -41,7 +53,7 @@ export default async function AdminPage({
       roleLabel="Administration"
       userName={user.name ?? user.email}
       homeHref="/admin"
-      nav={adminNav({ reviews: stats.reviewsPending, reports: stats.reportsOpen })}
+      nav={adminNav({ reviews: stats.reviewsPending, reports: stats.reportsOpen, messages: stats.messagesOpen })}
       activeKey={active === 'overview' ? 'overview' : active}
     >
       <PageHead eyebrow="Supervision de la plateforme" title="Console admin" />
@@ -54,16 +66,21 @@ export default async function AdminPage({
         <Stat icon={Clock} label="En attente de validation" value={stats.businesses.pending} hint={`${stats.businesses.suspended} suspendus`} />
         <Stat icon={Star} label="Avis à modérer" value={stats.reviewsPending} />
         <Stat icon={Flag} label="Signalements ouverts" value={stats.reportsOpen} />
+        <Stat icon={Mail} label="Messages non traités" value={stats.messagesOpen} />
       </div>
 
       <h2 className="mt-10 font-display text-2xl font-bold">{TAB_TITLES[active]}</h2>
       <div className="mt-4">
         {active === 'clients' ? (
           <ClientsTable />
+        ) : active === 'offers' ? (
+          <OffersTable />
         ) : active === 'reviews' ? (
           <ReviewsTable />
         ) : active === 'reports' ? (
           <ReportsTable />
+        ) : active === 'messages' ? (
+          <MessagesTable />
         ) : active === 'all' ? (
           <BusinessTable tab="all" />
         ) : (
@@ -147,4 +164,20 @@ async function ReportsTable() {
     return <p className="rounded-3xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">Aucun signalement ouvert.</p>
   }
   return <ReportRows rows={reports} />
+}
+
+async function OffersTable() {
+  const offers = await listAllOffers()
+  if (offers.length === 0) {
+    return <p className="rounded-3xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">Aucun bon plan publié.</p>
+  }
+  return <OfferRows rows={offers} />
+}
+
+async function MessagesTable() {
+  const messages = await listContactMessages(false)
+  if (messages.length === 0) {
+    return <p className="rounded-3xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">Aucun message en attente.</p>
+  }
+  return <MessageRows rows={messages} />
 }
