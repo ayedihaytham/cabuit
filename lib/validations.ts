@@ -1,9 +1,11 @@
 import { z } from 'zod'
+import { GOVERNORATE_KEYS } from '@/lib/regions'
 
 export const businessSchema = z.object({
   name: z.string().trim().min(2, 'Nom trop court').max(80),
   category: z.enum(['RESTAURANT', 'CAFE']),
   type: z.string().trim().min(2, 'Précisez le type').max(60),
+  region: z.enum(GOVERNORATE_KEYS as [string, ...string[]], { message: 'Choisissez un gouvernorat' }),
   city: z.string().trim().min(2).max(60),
   address: z.string().trim().min(4, 'Adresse trop courte').max(160),
   description: z.string().trim().min(20, 'Décrivez votre établissement (20 caractères min.)').max(600),

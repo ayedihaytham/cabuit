@@ -168,6 +168,8 @@ model Business {
   type        String // libellé libre : "Cuisine tunisienne", "Salon de thé"…
   address     String
   city        String
+  /** Gouvernorat (clé stable, cf. lib/regions.ts) : maille de filtrage géo. */
+  region      String?
   lat         Float?
   lng         Float?
   description String
@@ -195,6 +197,7 @@ model Business {
 
   @@index([status, category])
   @@index([city])
+  @@index([status, region])
 }
 
 model BusinessPhoto {

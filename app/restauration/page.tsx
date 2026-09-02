@@ -4,8 +4,11 @@ import { ArrowLeft, Utensils } from 'lucide-react'
 import { SiteHeader } from '@/components/layout/site-header'
 import { SiteFooter } from '@/components/layout/site-footer'
 import { DirectoryBrowser } from '@/components/directory/directory-browser'
+import { RegionPicker } from '@/components/region/region-picker'
 import { listActiveBusinesses } from '@/lib/queries'
 import { toUiBusiness } from '@/lib/business-ui'
+import { getPreferredRegion } from '@/lib/region-prefs'
+import { governorateLabel } from '@/lib/regions'
 
 export const metadata: Metadata = {
   title: 'Restauration',
@@ -13,16 +16,18 @@ export const metadata: Metadata = {
     'Les restaurants tunisiens sélectionnés par Winou pour leur goût, leur accueil et ce petit quelque chose qui donne envie de revenir.',
 }
 
-export const revalidate = 300
+export const dynamic = 'force-dynamic'
 
 export default async function RestaurationPage() {
-  const rows = await listActiveBusinesses({ category: 'RESTAURANT' })
+  const region = await getPreferredRegion()
+  const regionLabel = governorateLabel(region)
+  const rows = await listActiveBusinesses({ category: 'RESTAURANT', region: region ?? undefined })
   const businesses = rows.map(toUiBusiness)
   const count = businesses.length
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <SiteHeader />
+      <SiteHeader slot={<RegionPicker current={region} currentLabel={regionLabel} />} />
 
       <section className="border-b border-border bg-olive px-5 py-10 text-sand lg:px-8 lg:py-14">
         <div className="mx-auto max-w-7xl">
@@ -35,7 +40,7 @@ export default async function RestaurationPage() {
                 <ArrowLeft className="size-3.5" /> Explorer toutes les catégories
               </Link>
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-ochre">
-                Catégorie · {count} adresses
+                {regionLabel ?? 'Toute la Tunisie'} · {count} adresse{count > 1 ? 's' : ''}
               </p>
               <h1 className="mt-3 font-display text-4xl font-bold tracking-[-0.035em] sm:text-5xl">
                 Les tables qui font <span className="text-ochre">du bien.</span>

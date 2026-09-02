@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Menu, X } from 'lucide-react'
 import { Logo } from '@/components/layout/logo'
@@ -18,6 +18,8 @@ type SiteHeaderProps = {
   nav?: NavLink[]
   cta?: NavLink | null
   back?: NavLink | null
+  /** Élément optionnel affiché dans la barre (ex. sélecteur de zone). */
+  slot?: ReactNode
   className?: string
 }
 
@@ -26,6 +28,7 @@ export function SiteHeader({
   nav = MARKETING_NAV,
   cta = { label: 'Inscrire mon commerce', href: '/tarifs' },
   back = null,
+  slot = null,
   className,
 }: SiteHeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false)
@@ -64,28 +67,33 @@ export function SiteHeader({
           ))}
         </nav>
 
-        <button
-          type="button"
-          onClick={() => setMenuOpen((open) => !open)}
-          className="rounded-full p-2 text-foreground md:hidden"
-          aria-label="Ouvrir le menu"
-          aria-expanded={menuOpen}
-        >
-          {menuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
-        </button>
+        <div className="flex items-center gap-3">
+          {slot && <div className="hidden sm:block">{slot}</div>}
 
-        {cta && (
-          <Link
-            href={cta.href}
-            className="hidden rounded-full bg-terracotta px-5 py-3 text-sm font-semibold text-primary-foreground transition-transform hover:-translate-y-0.5 sm:inline-flex"
+          <button
+            type="button"
+            onClick={() => setMenuOpen((open) => !open)}
+            className="rounded-full p-2 text-foreground md:hidden"
+            aria-label="Ouvrir le menu"
+            aria-expanded={menuOpen}
           >
-            {cta.label}
-          </Link>
-        )}
+            {menuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+          </button>
+
+          {cta && (
+            <Link
+              href={cta.href}
+              className="hidden rounded-full bg-terracotta px-5 py-3 text-sm font-semibold text-primary-foreground transition-transform hover:-translate-y-0.5 sm:inline-flex"
+            >
+              {cta.label}
+            </Link>
+          )}
+        </div>
       </div>
 
       {menuOpen && (
         <nav className="flex flex-col gap-4 border-t border-border px-5 py-5 text-sm font-medium md:hidden">
+          {slot}
           {nav.map((link) => (
             <Link key={link.href} href={link.href} onClick={() => setMenuOpen(false)}>
               {link.label}

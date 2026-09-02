@@ -169,6 +169,7 @@ export default async function AdminBusinessPage({ params }: { params: Promise<{ 
                 name: b.name,
                 category: b.category,
                 type: b.type,
+                region: b.region ?? '',
                 city: b.city,
                 address: b.address,
                 description: b.description,

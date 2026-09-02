@@ -3,11 +3,13 @@
 import { useActionState } from 'react'
 import { Check } from 'lucide-react'
 import type { FormState } from '@/app/actions/business'
+import { GOVERNORATES } from '@/lib/regions'
 
 type Values = {
   name?: string
   category?: string
   type?: string
+  region?: string
   city?: string
   address?: string
   description?: string
@@ -45,7 +47,21 @@ export function BusinessForm({ action, values = {}, submitLabel }: BusinessFormP
       </label>
 
       <Field label="Type" name="type" placeholder="Cuisine tunisienne, Salon de thé…" defaultValue={values.type} error={err('type')} required />
-      <Field label="Ville" name="city" placeholder="La Marsa" defaultValue={values.city} error={err('city')} required />
+
+      <label className="field-label">
+        Gouvernorat <span className="text-terracotta">*</span>
+        <select name="region" defaultValue={values.region ?? ''} className="field-input" required>
+          <option value="" disabled>
+            Choisir…
+          </option>
+          {GOVERNORATES.map((g) => (
+            <option key={g.key} value={g.key}>{g.label}</option>
+          ))}
+        </select>
+        {err('region') && <span className="text-xs font-medium text-destructive">{err('region')}</span>}
+      </label>
+
+      <Field label="Ville / quartier" name="city" placeholder="La Marsa" defaultValue={values.city} error={err('city')} required />
       <Field label="Adresse" name="address" placeholder="12 rue des Jasmins" defaultValue={values.address} error={err('address')} required />
 
       <label className="field-label sm:col-span-2">

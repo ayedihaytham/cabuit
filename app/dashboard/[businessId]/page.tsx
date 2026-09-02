@@ -104,6 +104,7 @@ export default async function ManageBusinessPage({
               name: business.name,
               category: business.category,
               type: business.type,
+              region: business.region ?? '',
               city: business.city,
               address: business.address,
               description: business.description,

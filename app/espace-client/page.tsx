@@ -7,6 +7,7 @@ import { MemberCard } from '@/components/client/member-card'
 import { FavoriteToggleDb } from '@/components/business/favorite-toggle-db'
 import { ClaimOffer } from '@/components/business/claim-offer'
 import { OfferCard } from '@/components/offers/offer-card'
+import { RegionPicker } from '@/components/region/region-picker'
 import { requireUser } from '@/lib/session'
 import {
   getClientCounts,
@@ -15,6 +16,8 @@ import {
   listActiveBusinesses,
   listActiveOffers,
 } from '@/lib/queries'
+import { getPreferredRegion } from '@/lib/region-prefs'
+import { governorateLabel } from '@/lib/regions'
 import { CATEGORY_LABELS } from '@/lib/status'
 
 export const dynamic = 'force-dynamic'
@@ -71,20 +74,36 @@ export default async function EspaceClientPage({
 /* ---------- Onglets ---------- */
 
 async function OffersTab({ userId, firstName }: { userId: string; firstName: string }) {
-  const [offers, redemptions] = await Promise.all([listActiveOffers(), getClientRedemptions(userId)])
+  const region = await getPreferredRegion()
+  const regionLabel = governorateLabel(region)
+  const [offers, redemptions] = await Promise.all([
+    listActiveOffers(undefined, region ?? undefined),
+    getClientRedemptions(userId),
+  ])
   const codeByOffer = new Map(redemptions.map((r) => [r.offerId, r.code]))
 
   return (
     <>
-      <PageHead
-        eyebrow={`Bonjour ${firstName}`}
-        title="Les bons plans du moment."
-        subtitle="Récupère le bon plan, présente ton code au comptoir. Réservé aux membres Winou."
-      />
+      <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+        <PageHead
+          eyebrow={`Bonjour ${firstName}`}
+          title="Les bons plans du moment."
+          subtitle={
+            regionLabel
+              ? `Bons plans à ${regionLabel}. Présente ton code au comptoir.`
+              : 'Récupère le bon plan, présente ton code au comptoir. Réservé aux membres Winou.'
+          }
+        />
+        <RegionPicker current={region} currentLabel={regionLabel} variant="compact" />
+      </div>
       {offers.length === 0 ? (
         <EmptyState
           icon={Ticket}
-          text="Aucun bon plan actif pour l’instant. Reviens vite, les commerces en publient chaque semaine."
+          text={
+            regionLabel
+              ? `Aucun bon plan à ${regionLabel} pour l’instant. Choisis « Toute la Tunisie » pour voir tout.`
+              : 'Aucun bon plan actif pour l’instant. Reviens vite, les commerces en publient chaque semaine.'
+          }
         />
       ) : (
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
@@ -201,11 +220,30 @@ async function FavorisTab({ userId }: { userId: string }) {
 }
 
 async function DecouvrirTab({ userId }: { userId: string }) {
-  const [businesses, { favorites }] = await Promise.all([listActiveBusinesses(), getClientDashboard(userId)])
+  const region = await getPreferredRegion()
+  const regionLabel = governorateLabel(region)
+  const [businesses, { favorites }] = await Promise.all([
+    listActiveBusinesses({ region: region ?? undefined }),
+    getClientDashboard(userId),
+  ])
   const favIds = new Set(favorites.map((f) => f.businessId))
   return (
     <>
-      <PageHead eyebrow="À explorer" title="Découvrir" subtitle="Tous les restaurants et cafés validés sur Winou." />
+      <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+        <PageHead
+          eyebrow="À explorer"
+          title="Découvrir"
+          subtitle={
+            regionLabel
+              ? `Restaurants et cafés validés à ${regionLabel}.`
+              : 'Tous les restaurants et cafés validés sur Winou.'
+          }
+        />
+        <RegionPicker current={region} currentLabel={regionLabel} variant="compact" />
+      </div>
+      {businesses.length === 0 && (
+        <EmptyState icon={MapPin} text={`Aucune adresse à ${regionLabel} pour l’instant.`} />
+      )}
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
         {businesses.map((b) => (
           <PlaceCard

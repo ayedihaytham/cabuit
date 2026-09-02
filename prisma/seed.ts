@@ -10,6 +10,17 @@ function toDbCategory(category: Category): DbCategory {
   return category === 'Restauration' ? 'RESTAURANT' : 'CAFE'
 }
 
+/** Ville de démo -> gouvernorat (cf. lib/regions.ts). */
+const CITY_TO_REGION: Record<string, string> = {
+  'La Marsa': 'tunis',
+  'Sidi Bou Saïd': 'tunis',
+  'Tunis Centre': 'tunis',
+  Carthage: 'tunis',
+  'Les Berges du Lac': 'tunis',
+  Ariana: 'ariana',
+}
+const regionForCity = (city: string) => CITY_TO_REGION[city] ?? 'tunis'
+
 function oneYearFromNow() {
   const date = new Date()
   date.setFullYear(date.getFullYear() + 1)
@@ -58,7 +69,7 @@ async function main() {
   for (const b of BUSINESSES) {
     const business = await db.business.upsert({
       where: { slug: b.slug },
-      update: {},
+      update: { region: regionForCity(b.city) },
       create: {
         ownerId: merchant.id,
         name: b.name,
@@ -67,6 +78,7 @@ async function main() {
         type: b.type,
         address: b.address,
         city: b.city,
+        region: regionForCity(b.city),
         description: b.description,
         phone: b.phone,
         whatsapp: b.whatsapp,

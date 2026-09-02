@@ -22,14 +22,16 @@ export const listActiveBusinesses = unstable_cache(
 async function _listActiveBusinesses(options: {
   category?: Category
   city?: string
+  region?: string
   query?: string
 } = {}) {
-  const { category, city, query } = options
+  const { category, city, region, query } = options
   return db.business.findMany({
     where: {
       status: 'ACTIVE',
       ...(category ? { category } : {}),
       ...(city ? { city } : {}),
+      ...(region ? { region } : {}),
       ...(query
         ? {
             OR: [
@@ -78,10 +80,10 @@ export async function getPublicBusiness(slug: string) {
 // Bons plans
 // ------------------------------------------------------------------
 
-const activeOfferWhere = () => ({
+const activeOfferWhere = (region?: string) => ({
   status: 'ACTIVE' as const,
   OR: [{ validUntil: null }, { validUntil: { gte: new Date() } }],
-  business: { status: 'ACTIVE' as const },
+  business: { status: 'ACTIVE' as const, ...(region ? { region } : {}) },
 })
 
 export const listActiveOffers = unstable_cache(_listActiveOffers, ['list-active-offers'], {
@@ -89,9 +91,9 @@ export const listActiveOffers = unstable_cache(_listActiveOffers, ['list-active-
   tags: [TAG.offers, TAG.businesses],
 })
 
-async function _listActiveOffers(limit?: number) {
+async function _listActiveOffers(limit?: number, region?: string) {
   return db.offer.findMany({
-    where: activeOfferWhere(),
+    where: activeOfferWhere(region),
     orderBy: { createdAt: 'desc' },
     take: limit,
     relationLoadStrategy: 'join',
@@ -102,6 +104,7 @@ async function _listActiveOffers(limit?: number) {
           name: true,
           category: true,
           city: true,
+          region: true,
           photos: { take: 1, orderBy: { position: 'asc' } },
         },
       },
@@ -109,8 +112,8 @@ async function _listActiveOffers(limit?: number) {
   })
 }
 
-export async function countActiveOffers() {
-  return db.offer.count({ where: activeOfferWhere() })
+export async function countActiveOffers(region?: string) {
+  return db.offer.count({ where: activeOfferWhere(region) })
 }
 
 export async function getClientRedemptions(userId: string) {

@@ -8,8 +8,11 @@ import { HeroSearch } from '@/components/home/hero-search'
 import { FavoriteButton } from '@/components/home/favorite-button'
 import { SponsoredPlacement } from '@/components/sponsored-card'
 import { OfferCard } from '@/components/offers/offer-card'
+import { RegionPicker } from '@/components/region/region-picker'
 import { listActiveBusinesses, listActiveOffers } from '@/lib/queries'
 import { toUiBusiness } from '@/lib/business-ui'
+import { getPreferredRegion } from '@/lib/region-prefs'
+import { governorateLabel } from '@/lib/regions'
 
 const categories = [
   {
@@ -26,15 +29,21 @@ const categories = [
   },
 ]
 
-export const revalidate = 300
+export const dynamic = 'force-dynamic'
 
 export default async function HomePage() {
-  const [rows, offers] = await Promise.all([listActiveBusinesses(), listActiveOffers(3)])
+  const region = await getPreferredRegion()
+  const regionLabel = governorateLabel(region)
+  const zone = regionLabel ?? 'toute la Tunisie'
+  const [rows, offers] = await Promise.all([
+    listActiveBusinesses({ region: region ?? undefined }),
+    listActiveOffers(3, region ?? undefined),
+  ])
   const selection = rows.slice(0, 8).map(toUiBusiness)
 
   return (
     <div className="min-h-screen overflow-hidden bg-background text-foreground">
-      <SiteHeader />
+      <SiteHeader slot={<RegionPicker current={region} currentLabel={regionLabel} />} />
 
       <section className="mx-auto grid max-w-7xl gap-12 px-5 pb-16 pt-12 lg:grid-cols-[1.02fr_.98fr] lg:items-center lg:px-8 lg:pb-24 lg:pt-16">
         <div className="max-w-2xl">
@@ -53,8 +62,10 @@ export default async function HomePage() {
 
         <div className="relative mx-auto w-full max-w-xl lg:justify-self-end">
           <div className="absolute -left-5 top-10 z-10 hidden rounded-2xl bg-card px-4 py-3 shadow-lg sm:block">
-            <p className="text-xs font-semibold text-foreground">Aujourd’hui à Tunis</p>
-            <p className="mt-1 text-xs text-muted-foreground">24° · 128 adresses à découvrir</p>
+            <p className="text-xs font-semibold capitalize text-foreground">Aujourd’hui · {zone}</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {rows.length} adresse{rows.length > 1 ? 's' : ''} à découvrir
+            </p>
           </div>
           <div className="relative aspect-square overflow-hidden rounded-[2rem] rounded-bl-[5rem] bg-ochre/20">
             <Image
@@ -161,10 +172,17 @@ export default async function HomePage() {
               Les adresses à ne pas rater.
             </h2>
           </div>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <MapPin className="size-4 text-terracotta" /> Tunis & alentours
+          <div className="flex items-center gap-2 text-sm capitalize text-muted-foreground">
+            <MapPin className="size-4 text-terracotta" /> {zone}
           </div>
         </div>
+
+        {selection.length === 0 && (
+          <p className="mt-8 rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+            Aucune adresse à <span className="capitalize">{zone}</span> pour l’instant. Change de zone
+            dans le sélecteur en haut, ou choisis « Toute la Tunisie ».
+          </p>
+        )}
 
         <div className="mt-9 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {selection.map((business) => (
