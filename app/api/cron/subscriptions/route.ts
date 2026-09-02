@@ -16,8 +16,14 @@ const GRACE_DAYS = 7
  */
 export async function GET(request: Request) {
   const secret = process.env.CRON_SECRET
-  if (secret && new URL(request.url).searchParams.get('key') !== secret) {
-    return NextResponse.json({ ok: false }, { status: 401 })
+  if (secret) {
+    // Vercel Cron envoie `Authorization: Bearer <CRON_SECRET>` ; un cron externe
+    // peut aussi passer `?key=<CRON_SECRET>`.
+    const bearer = request.headers.get('authorization') === `Bearer ${secret}`
+    const key = new URL(request.url).searchParams.get('key') === secret
+    if (!bearer && !key) {
+      return NextResponse.json({ ok: false }, { status: 401 })
+    }
   }
 
   const now = new Date()

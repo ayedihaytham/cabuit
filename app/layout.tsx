@@ -3,12 +3,19 @@ import type { Metadata, Viewport } from 'next'
 import { DM_Sans, Fraunces } from 'next/font/google'
 import './globals.css'
 import { BRAND, TAGLINE } from '@/lib/constants'
+import { CookieConsent } from '@/components/cookie-consent'
 
 const dmSans = DM_Sans({ subsets: ['latin'], display: 'swap', variable: '--font-body' })
 const fraunces = Fraunces({ subsets: ['latin'], display: 'swap', variable: '--font-display-face' })
 
+const siteUrl =
+  process.env.NEXT_PUBLIC_APP_URL ||
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : 'http://localhost:3100')
+
 export const metadata: Metadata = {
-  metadataBase: new URL('https://winou.tn'),
+  metadataBase: new URL(siteUrl),
   title: {
     default: `${BRAND} — ${TAGLINE}`,
     template: `%s · ${BRAND}`,
@@ -37,6 +44,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="fr" className="bg-background">
       <body className={`${dmSans.variable} ${fraunces.variable} antialiased`}>
         {children}
+        <CookieConsent />
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

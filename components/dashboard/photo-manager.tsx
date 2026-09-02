@@ -2,16 +2,18 @@
 
 import { useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { ImagePlus, Star, Trash2 } from 'lucide-react'
-import { addPhoto, removePhoto, setCover } from '@/app/actions/photos'
+import { ImagePlus, Loader2, Star, Trash2, Upload } from 'lucide-react'
+import { addPhoto, removePhoto, setCover, uploadPhoto } from '@/app/actions/photos'
 
 type Photo = { id: string; url: string }
 
 export function PhotoManager({ businessId, photos }: { businessId: string; photos: Photo[] }) {
   const [pending, start] = useTransition()
+  const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
   const inputRef = useRef<HTMLInputElement>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
 
   const run = (fn: () => Promise<{ error?: string } | void>) =>
     start(async () => {
@@ -19,6 +21,19 @@ export function PhotoManager({ businessId, photos }: { businessId: string; photo
       setError(res?.error ?? '')
       if (!res?.error) router.refresh()
     })
+
+  const onFile = async (file: File | undefined) => {
+    if (!file) return
+    setError('')
+    setUploading(true)
+    const fd = new FormData()
+    fd.set('file', file)
+    const res = await uploadPhoto(businessId, fd)
+    setUploading(false)
+    if (fileRef.current) fileRef.current.value = ''
+    if (res?.error) setError(res.error)
+    else router.refresh()
+  }
 
   return (
     <div>
@@ -56,12 +71,42 @@ export function PhotoManager({ businessId, photos }: { businessId: string; photo
         ))}
       </div>
 
+      <div className="mt-4">
+        <button
+          type="button"
+          onClick={() => fileRef.current?.click()}
+          disabled={uploading || photos.length >= 8}
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-secondary/40 px-4 py-6 text-sm font-semibold text-muted-foreground transition hover:border-terracotta hover:text-terracotta disabled:opacity-50"
+        >
+          {uploading ? (
+            <>
+              <Loader2 className="size-4 animate-spin" /> Envoi en cours…
+            </>
+          ) : (
+            <>
+              <Upload className="size-4" /> Choisir une photo depuis mon appareil
+            </>
+          )}
+        </button>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/avif"
+          className="hidden"
+          onChange={(e) => onFile(e.target.files?.[0])}
+        />
+      </div>
+
+      <div className="mt-3 flex items-center gap-3 text-xs text-muted-foreground">
+        <span className="h-px flex-1 bg-border" /> ou coller un lien <span className="h-px flex-1 bg-border" />
+      </div>
+
       <form
         action={(fd) => {
           run(() => addPhoto(businessId, fd))
           if (inputRef.current) inputRef.current.value = ''
         }}
-        className="mt-4 flex flex-wrap items-center gap-2"
+        className="mt-3 flex flex-wrap items-center gap-2"
       >
         <ImagePlus className="size-4 text-terracotta" />
         <input

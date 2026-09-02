@@ -161,3 +161,39 @@ export async function markContactHandled(id: string) {
   revalidatePath('/admin')
   return { ok: true }
 }
+
+// ------------------------------------------------------------------
+// Utilisateurs
+// ------------------------------------------------------------------
+
+const ROLES = ['CLIENT', 'MERCHANT', 'ADMIN'] as const
+type RoleValue = (typeof ROLES)[number]
+
+export async function adminSetUserRole(userId: string, role: RoleValue) {
+  const admin = await requireUser(['ADMIN'])
+  if (!ROLES.includes(role)) return { error: 'Rôle inconnu.' }
+  if (userId === admin.id) return { error: 'Vous ne pouvez pas changer votre propre rôle.' }
+
+  const target = await db.user.findUnique({
+    where: { id: userId },
+    select: { role: true, _count: { select: { businesses: true } } },
+  })
+  if (!target) return { error: 'Utilisateur introuvable.' }
+  if (target.role === role) return { ok: true }
+
+  if (target.role === 'ADMIN') {
+    const admins = await db.user.count({ where: { role: 'ADMIN' } })
+    if (admins <= 1) return { error: 'Impossible : c’est le dernier administrateur.' }
+  }
+  if (role === 'CLIENT' && target._count.businesses > 0) {
+    return { error: 'Cet utilisateur possède des établissements — gardez-le commerçant.' }
+  }
+
+  await db.user.update({ where: { id: userId }, data: { role } })
+  await db.auditLog.create({
+    data: { actorId: admin.id, action: `user.role.${role}`, entity: 'User', entityId: userId },
+  })
+  revalidatePath('/admin/utilisateurs')
+  revalidateTag(TAG.stats, 'max')
+  return { ok: true }
+}

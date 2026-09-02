@@ -43,4 +43,8 @@ export function layout(title: string, body: string, cta?: { href: string; label:
 }
 
 export const appUrl = () =>
-  process.env.AUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3100'
+  process.env.NEXT_PUBLIC_APP_URL ||
+  process.env.AUTH_URL ||
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : 'http://localhost:3100')

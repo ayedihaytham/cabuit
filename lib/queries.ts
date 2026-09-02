@@ -378,6 +378,31 @@ export async function listClientsForAdmin() {
   })
 }
 
+export async function listUsersForAdmin(q?: string) {
+  const term = q?.trim()
+  return db.user.findMany({
+    where: term
+      ? {
+          OR: [
+            { email: { contains: term, mode: 'insensitive' } },
+            { name: { contains: term, mode: 'insensitive' } },
+          ],
+        }
+      : undefined,
+    orderBy: { createdAt: 'desc' },
+    take: 100,
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      createdAt: true,
+      emailVerified: true,
+      _count: { select: { businesses: true } },
+    },
+  })
+}
+
 function daysAgo(n: number) {
   const d = new Date()
   d.setDate(d.getDate() - n)
