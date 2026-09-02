@@ -46,7 +46,7 @@ export function SubmitForReview({ action }: Props) {
           <Link href="/cgu" target="_blank" className="font-semibold text-terracotta underline">
             Conditions Générales d’Abonnement (v1)
           </Link>{' '}
-          de Blayes. Mon acceptation est enregistrée avec la date et mon adresse IP.
+          de Winou. Mon acceptation est enregistrée avec la date et mon adresse IP.
         </span>
       </label>
       {state.fieldErrors?.acceptTerms && (

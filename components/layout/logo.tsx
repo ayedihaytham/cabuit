@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils'
 type LogoProps = {
   href?: string
   className?: string
-  /** Couleur du mot « Blayes » ; le point reste terracotta. */
+  /** Couleur du mot « Winou » ; le point reste terracotta. */
   tone?: 'ink' | 'terracotta'
 }
 

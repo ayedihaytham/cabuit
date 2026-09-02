@@ -8,7 +8,7 @@ export default function CguPage() {
     <LegalPage title="Conditions Générales d'Abonnement" updated="1er septembre 2026">
       <p>
         Les présentes conditions (version <strong>v1</strong>) régissent l’abonnement des
-        établissements (restaurants, cafés et salons de thé) à la plateforme Blayes. En cochant la
+        établissements (restaurants, cafés et salons de thé) à la plateforme Winou. En cochant la
         case d’acceptation lors de la soumission d’une fiche, le commerçant accepte sans réserve les
         présentes conditions. Cette acceptation est horodatée et associée à l’adresse IP de
         connexion.
@@ -16,7 +16,7 @@ export default function CguPage() {
 
       <h2>1. Objet</h2>
       <p>
-        Blayes met à disposition du commerçant une fiche en ligne présentant son établissement, sa
+        Winou met à disposition du commerçant une fiche en ligne présentant son établissement, sa
         carte et ses coordonnées, ainsi qu’un tableau de bord de gestion et des statistiques de
         visibilité.
       </p>
@@ -32,13 +32,13 @@ export default function CguPage() {
       <h2>3. Tarifs et paiement</h2>
       <p>
         Les tarifs annuels sont ceux affichés sur la page Tarifs au moment de la souscription. Le
-        règlement s’effectue par les moyens proposés par Blayes (virement, espèces, paiement en
+        règlement s’effectue par les moyens proposés par Winou (virement, espèces, paiement en
         ligne). Une facture est émise pour chaque paiement.
       </p>
 
       <h2>4. Validation des fiches</h2>
       <p>
-        Toute fiche est vérifiée par l’équipe Blayes avant publication. Blayes peut refuser,
+        Toute fiche est vérifiée par l’équipe Winou avant publication. Winou peut refuser,
         suspendre ou retirer une fiche en cas d’informations inexactes, de contenu inapproprié ou de
         non-paiement.
       </p>
@@ -57,7 +57,7 @@ export default function CguPage() {
 
       <h2>7. Responsabilité</h2>
       <p>
-        Blayes agit comme intermédiaire de mise en relation et n’est pas partie aux transactions
+        Winou agit comme intermédiaire de mise en relation et n’est pas partie aux transactions
         entre clients et établissements.
       </p>
 

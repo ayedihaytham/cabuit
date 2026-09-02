@@ -29,7 +29,7 @@ export async function requestReset(_prev: ResetState, formData: FormData): Promi
     const link = `${appUrl()}/reinitialiser?token=${token}`
     await sendEmail({
       to: email,
-      subject: 'Réinitialiser votre mot de passe Blayes',
+      subject: 'Réinitialiser votre mot de passe Winou',
       html: layout(
         'Réinitialisation du mot de passe',
         `<p>Vous avez demandé à réinitialiser votre mot de passe. Ce lien est valable 1 heure.</p>

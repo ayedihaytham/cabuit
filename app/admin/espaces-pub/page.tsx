@@ -56,7 +56,7 @@ export default function AdminEspacesPubPage() {
       <main className="mx-auto max-w-6xl px-5 py-8 lg:px-10 lg:py-12">
         <div className="flex flex-col justify-between gap-4 border-b border-border pb-7 sm:flex-row sm:items-end">
           <div>
-            <p className="text-sm font-medium text-primary">Blayes admin / Espaces sponsorisés</p>
+            <p className="text-sm font-medium text-primary">Winou admin / Espaces sponsorisés</p>
             <h1 className="mt-2 font-display text-3xl font-bold tracking-tight sm:text-4xl">
               Réservations sponsorisées
             </h1>

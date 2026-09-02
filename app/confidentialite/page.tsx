@@ -7,7 +7,7 @@ export default function ConfidentialitePage() {
   return (
     <LegalPage title="Politique de confidentialité" updated="1er septembre 2026">
       <p>
-        Cette politique décrit les données personnelles traitées par Blayes et l’usage qui en est
+        Cette politique décrit les données personnelles traitées par Winou et l’usage qui en est
         fait, conformément à la loi tunisienne n° 2004-63 relative à la protection des données à
         caractère personnel.
       </p>
@@ -42,7 +42,7 @@ export default function ConfidentialitePage() {
 
       <h2>Cookies</h2>
       <p>
-        Blayes utilise un cookie de session strictement nécessaire à l’authentification. Aucun cookie
+        Winou utilise un cookie de session strictement nécessaire à l’authentification. Aucun cookie
         publicitaire tiers n’est déposé.
       </p>
     </LegalPage>

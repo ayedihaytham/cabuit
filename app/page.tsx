@@ -45,7 +45,7 @@ export default async function HomePage() {
             Trouve les meilleurs <span className="text-terracotta">bons plans</span> près de chez toi.
           </h1>
           <p className="mt-7 max-w-lg text-base leading-7 text-muted-foreground sm:text-lg">
-            Blayes regroupe les restaurants et les cafés / salons de thé de Tunisie sur une seule
+            Winou regroupe les restaurants et les cafés / salons de thé de Tunisie sur une seule
             plateforme. Des petits commerces, de grandes histoires, juste à côté.
           </p>
           <HeroSearch />
@@ -156,7 +156,7 @@ export default async function HomePage() {
       <section id="selection" className="mx-auto max-w-7xl px-5 py-16 lg:px-8 lg:py-20">
         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
           <div>
-            <p className="eyebrow">Sélection Blayes</p>
+            <p className="eyebrow">Sélection Winou</p>
             <h2 className="mt-3 font-display text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
               Les adresses à ne pas rater.
             </h2>

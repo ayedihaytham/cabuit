@@ -67,7 +67,7 @@ export default async function ManageBusinessPage({
         )}
         {business.status === 'PENDING' && (
           <p className="mt-4 rounded-xl bg-ochre/15 px-4 py-3 text-sm font-medium text-ochre">
-            Fiche en cours de validation par l’équipe Blayes.
+            Fiche en cours de validation par l’équipe Winou.
           </p>
         )}
         {business.status === 'REJECTED' && (
@@ -138,7 +138,7 @@ export default async function ManageBusinessPage({
           <section className="mt-6 rounded-2xl border border-terracotta/30 bg-terracotta/5 p-5 sm:p-7">
             <h2 className="font-display text-2xl font-bold">Choisir une offre & envoyer à validation</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Après validation par Blayes, votre fiche devient publique. 30 jours d’essai gratuit,
+              Après validation par Winou, votre fiche devient publique. 30 jours d’essai gratuit,
               sans engagement.
             </p>
             <div className="mt-5">
@@ -176,7 +176,7 @@ export default async function ManageBusinessPage({
             <section className="mt-6 rounded-2xl border border-terracotta/30 bg-terracotta/5 p-5 sm:p-7">
               <h2 className="font-display text-2xl font-bold">Bons plans</h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                Une offre membres attire les clients Blayes et vous donne un trafic mesurable en
+                Une offre membres attire les clients Winou et vous donne un trafic mesurable en
                 boutique. Ils présentent un code au comptoir.
               </p>
               <div className="mt-5">

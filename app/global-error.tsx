@@ -29,7 +29,7 @@ export default function GlobalError({
       >
         <div style={{ maxWidth: 460, textAlign: 'center', padding: 24 }}>
           <p style={{ fontWeight: 800, fontSize: 22, color: '#af4930', margin: 0 }}>
-            Blayes<span style={{ color: '#af4930' }}>.</span>
+            Winou<span style={{ color: '#af4930' }}>.</span>
           </p>
           <h1 style={{ fontSize: 28, margin: '20px 0 8px' }}>Le service est indisponible</h1>
           <p style={{ color: '#5b5044', lineHeight: 1.6, margin: 0 }}>

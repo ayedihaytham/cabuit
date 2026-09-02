@@ -43,7 +43,7 @@ async function createAccount(
 
   void sendEmail({
     to: email,
-    subject: `Bienvenue sur Blayes${role === 'MERCHANT' ? ' — inscrivez votre établissement' : ''} !`,
+    subject: `Bienvenue sur Winou${role === 'MERCHANT' ? ' — inscrivez votre établissement' : ''} !`,
     html: layout(
       `Bienvenue ${name} 👋`,
       role === 'MERCHANT'

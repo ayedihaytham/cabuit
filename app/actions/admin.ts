@@ -48,11 +48,11 @@ export async function moderateBusiness(businessId: string, action: keyof typeof 
   if (action === 'approve') {
     void sendEmail({
       to: business.owner.email,
-      subject: `${business.name} est en ligne sur Blayes 🎉`,
+      subject: `${business.name} est en ligne sur Winou 🎉`,
       html: layout(
         'Votre fiche est validée',
         `<p>Bonjour ${business.owner.name ?? ''},</p>
-         <p><strong>${business.name}</strong> est désormais visible par tous les membres Blayes.
+         <p><strong>${business.name}</strong> est désormais visible par tous les membres Winou.
          Pensez à ajouter vos photos et à publier un bon plan pour attirer vos premiers clients.</p>`,
         { href: `${appUrl()}/dashboard`, label: 'Ouvrir mon tableau de bord' },
       ),

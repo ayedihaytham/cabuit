@@ -79,7 +79,7 @@ async function OffersTab({ userId, firstName }: { userId: string; firstName: str
       <PageHead
         eyebrow={`Bonjour ${firstName}`}
         title="Les bons plans du moment."
-        subtitle="Récupère le bon plan, présente ton code au comptoir. Réservé aux membres Blayes."
+        subtitle="Récupère le bon plan, présente ton code au comptoir. Réservé aux membres Winou."
       />
       {offers.length === 0 ? (
         <EmptyState
@@ -205,7 +205,7 @@ async function DecouvrirTab({ userId }: { userId: string }) {
   const favIds = new Set(favorites.map((f) => f.businessId))
   return (
     <>
-      <PageHead eyebrow="À explorer" title="Découvrir" subtitle="Tous les restaurants et cafés validés sur Blayes." />
+      <PageHead eyebrow="À explorer" title="Découvrir" subtitle="Tous les restaurants et cafés validés sur Winou." />
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
         {businesses.map((b) => (
           <PlaceCard

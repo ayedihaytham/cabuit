@@ -8,13 +8,13 @@ const dmSans = DM_Sans({ subsets: ['latin'], display: 'swap', variable: '--font-
 const fraunces = Fraunces({ subsets: ['latin'], display: 'swap', variable: '--font-display-face' })
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://blayes.tn'),
+  metadataBase: new URL('https://winou.tn'),
   title: {
     default: `${BRAND} — ${TAGLINE}`,
     template: `%s · ${BRAND}`,
   },
   description:
-    'Blayes regroupe les restaurants et cafés / salons de thé de Tunisie sur une seule plateforme : explorez les bons plans, les commerces exposent leur espace via un abonnement annuel.',
+    'Winou regroupe les restaurants et cafés / salons de thé de Tunisie sur une seule plateforme : explorez les bons plans, les commerces exposent leur espace via un abonnement annuel.',
   openGraph: {
     type: 'website',
     locale: 'fr_TN',

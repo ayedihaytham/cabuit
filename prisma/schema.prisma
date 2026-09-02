@@ -1,4 +1,4 @@
-// Blayes — schéma de base de données
+// Winou — schéma de base de données
 // Docs : https://pris.ly/d/prisma-schema
 
 generator client {

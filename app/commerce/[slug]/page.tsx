@@ -183,7 +183,7 @@ export default async function CommercePage({ params }: { params: Promise<{ slug:
 
         {business.offers.length > 0 && (
           <section className="mt-12 border-t border-border pt-10">
-            <p className="eyebrow">Réservé aux membres Blayes</p>
+            <p className="eyebrow">Réservé aux membres Winou</p>
             <h2 className="mt-2 font-display text-3xl font-bold">Bons plans</h2>
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
               {business.offers.map((offer) => (
@@ -241,7 +241,7 @@ export default async function CommercePage({ params }: { params: Promise<{ slug:
               {business.reviews.map((r) => (
                 <article key={r.id} className="rounded-2xl border border-border bg-card p-5">
                   <div className="flex items-center justify-between">
-                    <strong>{r.author.name ?? 'Client Blayes'}</strong>
+                    <strong>{r.author.name ?? 'Client Winou'}</strong>
                     <span className="flex items-center gap-1 text-ochre">
                       <Star className="size-4 fill-current" /> {r.rating}
                     </span>

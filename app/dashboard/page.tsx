@@ -47,14 +47,14 @@ export default async function DashboardPage({
 
       {submitted && (
         <p className="mb-6 rounded-xl bg-olive/10 px-4 py-3 text-sm font-medium text-olive">
-          Votre demande est envoyée. L’équipe Blayes valide votre fiche sous 48 h.
+          Votre demande est envoyée. L’équipe Winou valide votre fiche sous 48 h.
         </p>
       )}
 
       {businesses.length === 0 ? (
         <EmptyState
           icon={Store}
-          text="Créez la fiche de votre restaurant ou café pour rejoindre la carte Blayes."
+          text="Créez la fiche de votre restaurant ou café pour rejoindre la carte Winou."
           cta={
             <Link
               href="/dashboard/nouveau"

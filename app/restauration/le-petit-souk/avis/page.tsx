@@ -12,7 +12,7 @@ import {
 
 export const metadata: Metadata = {
   title: 'Avis clients · Le Petit Souk',
-  description: 'Les expériences de la communauté Blayes au Petit Souk, à La Marsa.',
+  description: 'Les expériences de la communauté Winou au Petit Souk, à La Marsa.',
 }
 
 export default function AvisPage() {
@@ -43,7 +43,7 @@ export default function AvisPage() {
               Ce qu’en disent nos clients
             </h1>
             <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
-              Une table généreuse qui se partage. Découvrez les expériences de la communauté Blayes.
+              Une table généreuse qui se partage. Découvrez les expériences de la communauté Winou.
             </p>
           </div>
           <ReviewForm />

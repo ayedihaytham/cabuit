@@ -80,7 +80,7 @@ export function SponsoredPlacement() {
 export function SponsoredFallback() {
   return (
     <p className="rounded-2xl border border-dashed border-border p-6 text-sm text-muted-foreground">
-      Aucun espace sponsorisé réservé aujourd’hui. Découvre les bonnes adresses sélectionnées par Blayes.
+      Aucun espace sponsorisé réservé aujourd’hui. Découvre les bonnes adresses sélectionnées par Winou.
     </p>
   )
 }

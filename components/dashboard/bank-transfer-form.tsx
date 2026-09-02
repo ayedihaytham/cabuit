@@ -13,7 +13,7 @@ export function BankTransferForm({ subscriptionId }: { subscriptionId: string })
   if (state.ok) {
     return (
       <p className="inline-flex items-center gap-2 rounded-xl bg-olive/10 px-4 py-3 text-sm font-medium text-olive">
-        <Check className="size-4" /> Virement déclaré. L’équipe Blayes le confirme sous 48 h.
+        <Check className="size-4" /> Virement déclaré. L’équipe Winou le confirme sous 48 h.
       </p>
     )
   }

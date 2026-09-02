@@ -10,7 +10,7 @@ import { toUiBusiness } from '@/lib/business-ui'
 export const metadata: Metadata = {
   title: 'Restauration',
   description:
-    'Les restaurants tunisiens sélectionnés par Blayes pour leur goût, leur accueil et ce petit quelque chose qui donne envie de revenir.',
+    'Les restaurants tunisiens sélectionnés par Winou pour leur goût, leur accueil et ce petit quelque chose qui donne envie de revenir.',
 }
 
 export const revalidate = 300

@@ -24,14 +24,14 @@ function inDays(days: number) {
 
 async function main() {
   // --- Admin ---
-  const adminEmail = process.env.SEED_ADMIN_EMAIL ?? 'admin@blayes.tn'
+  const adminEmail = process.env.SEED_ADMIN_EMAIL ?? 'admin@winou.tn'
   const adminPassword = process.env.SEED_ADMIN_PASSWORD ?? 'change-me'
   const admin = await db.user.upsert({
     where: { email: adminEmail },
     update: { role: 'ADMIN' },
     create: {
       email: adminEmail,
-      name: 'Admin Blayes',
+      name: 'Admin Winou',
       role: 'ADMIN',
       passwordHash: await bcrypt.hash(adminPassword, 10),
       emailVerified: new Date(),
@@ -41,10 +41,10 @@ async function main() {
 
   // --- Commerçant de démonstration + reprise des fiches de lib/data ---
   const merchant = await db.user.upsert({
-    where: { email: 'commercant@blayes.tn' },
+    where: { email: 'commercant@winou.tn' },
     update: { role: 'MERCHANT' },
     create: {
-      email: 'commercant@blayes.tn',
+      email: 'commercant@winou.tn',
       name: 'Propriétaire démo',
       role: 'MERCHANT',
       passwordHash: await bcrypt.hash('demo1234', 10),
@@ -165,10 +165,10 @@ async function main() {
     // Clients de démonstration + avis publiés
     for (const [i, review] of PETIT_SOUK_REVIEWS.entries()) {
       const client = await db.user.upsert({
-        where: { email: `client${i + 1}@blayes.tn` },
+        where: { email: `client${i + 1}@winou.tn` },
         update: {},
         create: {
-          email: `client${i + 1}@blayes.tn`,
+          email: `client${i + 1}@winou.tn`,
           name: review.author,
           role: 'CLIENT',
           passwordHash: await bcrypt.hash('demo1234', 10),

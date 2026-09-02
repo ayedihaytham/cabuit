@@ -34,11 +34,11 @@ export default function ConfirmationPage() {
         </div>
         <p className="eyebrow mt-7">Inscription confirmée</p>
         <h1 className="mt-3 font-display text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
-          Bienvenue sur Blayes !
+          Bienvenue sur Winou !
         </h1>
         <p className="mx-auto mt-5 max-w-md text-base leading-7 text-muted-foreground">
           Ton essai gratuit de {TRIAL_DAYS} jours a commencé. Profite pleinement de ta présence sur
-          Blayes dès aujourd’hui.
+          Winou dès aujourd’hui.
         </p>
 
         <div className="mt-8 grid gap-3 text-left sm:grid-cols-2">

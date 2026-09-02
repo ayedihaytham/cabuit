@@ -26,7 +26,7 @@ const faqs = [
   ],
   [
     'Le paiement est-il annuel ?',
-    "Oui, l'abonnement Blayes se règle une fois par an. Les tarifs affichés sont les tarifs annuels, tous les services décrits inclus.",
+    "Oui, l'abonnement Winou se règle une fois par an. Les tarifs affichés sont les tarifs annuels, tous les services décrits inclus.",
   ],
 ]
 

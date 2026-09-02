@@ -7,7 +7,7 @@ import { SiteFooter } from '@/components/layout/site-footer'
 export const metadata: Metadata = {
   title: 'À propos',
   description:
-    'Blayes aide les restaurants et cafés / salons de thé locaux à être plus proches de leurs clients.',
+    'Winou aide les restaurants et cafés / salons de thé locaux à être plus proches de leurs clients.',
 }
 
 const steps = [
@@ -34,12 +34,12 @@ export default function AboutPage() {
       <SiteHeader />
 
       <section className="mx-auto max-w-6xl px-5 pb-16 pt-14 sm:px-8 sm:pt-24">
-        <p className="eyebrow">À propos de Blayes</p>
+        <p className="eyebrow">À propos de Winou</p>
         <h1 className="mt-4 max-w-4xl font-display text-5xl leading-[.98] tracking-tight sm:text-7xl">
           Les belles adresses commencent <span className="text-terracotta">près de chez toi.</span>
         </h1>
         <p className="mt-8 max-w-2xl text-lg leading-8 text-muted-foreground">
-          Blayes aide les restaurants et les cafés / salons de thé de Tunisie à être plus proches de
+          Winou aide les restaurants et les cafés / salons de thé de Tunisie à être plus proches de
           leurs clients. Une vitrine simple, humaine et faite pour donner envie de pousser la porte.
         </p>
       </section>
@@ -54,7 +54,7 @@ export default function AboutPage() {
           </h2>
           <p className="mt-7 max-w-2xl text-base leading-7 text-primary-foreground/75">
             Nous croyons que les commerces de quartier méritent d’être trouvés aussi facilement que
-            les grandes enseignes. Blayes met leur savoir-faire au premier plan et rapproche les
+            les grandes enseignes. Winou met leur savoir-faire au premier plan et rapproche les
             habitants de ce qui rend leur ville unique.
           </p>
         </div>

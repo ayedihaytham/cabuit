@@ -21,7 +21,7 @@ export default function ContactPage() {
             Parlons-nous<span className="text-terracotta">.</span>
           </h1>
           <p className="mt-7 max-w-md text-base leading-7 text-muted-foreground">
-            Une question sur Blayes, une suggestion ou simplement envie de nous dire bonjour ?
+            Une question sur Winou, une suggestion ou simplement envie de nous dire bonjour ?
             Écris-nous.
           </p>
           <div className="mt-10 flex flex-col gap-5 text-sm">
@@ -29,7 +29,7 @@ export default function ContactPage() {
               <Mail className="size-5 text-terracotta" /> {CONTACT_EMAIL}
             </a>
             <a href={INSTAGRAM_URL} className="flex items-center gap-3 font-semibold hover:text-terracotta">
-              <Link2 className="size-5 text-terracotta" /> @blayes.tn
+              <Link2 className="size-5 text-terracotta" /> @winou.tn
             </a>
           </div>
         </div>

@@ -32,7 +32,7 @@ export async function GET(request: Request) {
     await db.subscription.update({ where: { id: sub.id }, data: { status: 'PENDING_PAYMENT' } })
     void sendEmail({
       to: sub.business.owner.email,
-      subject: `Votre essai Blayes est terminé — réglez pour rester en ligne`,
+      subject: `Votre essai Winou est terminé — réglez pour rester en ligne`,
       html: layout(
         'Essai gratuit terminé',
         `<p>L'essai de <strong>${sub.business.name}</strong> est arrivé à échéance.

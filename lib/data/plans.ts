@@ -1,7 +1,7 @@
 import type { Plan } from '@/lib/types'
 
 /**
- * Offres d'abonnement Blayes — cycle annuel.
+ * Offres d'abonnement Winou — cycle annuel.
  * TODO(produit) : valider les montants annuels définitifs avec l'équipe.
  */
 export const PLANS: Plan[] = [

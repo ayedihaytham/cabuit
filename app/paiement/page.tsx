@@ -74,7 +74,7 @@ export default async function PaiementPage({
             <h2 className="font-display text-2xl font-bold">Paiement par virement</h2>
           </div>
           <p className="mt-2 text-sm text-muted-foreground">
-            Effectuez un virement du montant ci-dessus, puis déclarez-le. L’équipe Blayes le vérifie
+            Effectuez un virement du montant ci-dessus, puis déclarez-le. L’équipe Winou le vérifie
             et active votre abonnement.
           </p>
 
@@ -84,7 +84,7 @@ export default async function PaiementPage({
             <Row k="RIB" v={BANK_DETAILS.rib} />
             <Row k="IBAN" v={BANK_DETAILS.iban} />
             <Row k="Montant" v={`${sub.pricePerYear} DT`} />
-            <Row k="Motif" v={`Blayes ${business.slug}`} />
+            <Row k="Motif" v={`Winou ${business.slug}`} />
           </div>
 
           <div className="mt-6">
