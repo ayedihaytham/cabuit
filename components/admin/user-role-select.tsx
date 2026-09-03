@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { adminSetUserRole } from '@/app/actions/admin'
+import { ListboxSelect } from '@/components/ui/listbox-select'
 
 const ROLES = [
   { value: 'CLIENT', label: 'Client' },
@@ -40,18 +41,15 @@ export function UserRoleSelect({
 
   return (
     <div className="flex flex-col items-end gap-1">
-      <select
+      <ListboxSelect
+        ariaLabel="Rôle de l’utilisateur"
+        className="w-40"
+        align="right"
         value={value}
         disabled={disabled || pending}
-        onChange={(e) => change(e.target.value as Role)}
-        className="select-field px-2.5 py-1.5 text-xs font-semibold disabled:opacity-50"
-      >
-        {ROLES.map((r) => (
-          <option key={r.value} value={r.value}>
-            {r.label}
-          </option>
-        ))}
-      </select>
+        options={ROLES.map((r) => ({ value: r.value, label: r.label }))}
+        onChange={(v) => change(v as Role)}
+      />
       {error && <span className="max-w-52 text-right text-[11px] font-medium text-destructive">{error}</span>}
     </div>
   )

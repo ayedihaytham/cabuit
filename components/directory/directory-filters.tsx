@@ -4,12 +4,24 @@ import { useEffect, useRef, useState } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { Filter, Search, SlidersHorizontal, X } from 'lucide-react'
 import { GOVERNORATES } from '@/lib/regions'
+import { ListboxSelect } from '@/components/ui/listbox-select'
 
 const SORTS = [
   { value: 'pertinence', label: 'Pertinence' },
   { value: 'note', label: 'Note' },
   { value: 'nouveaute', label: 'Nouveauté' },
   { value: 'nom', label: 'Nom (A→Z)' },
+]
+
+const CATEGORIES = [
+  { value: '', label: 'Toutes catégories' },
+  { value: 'RESTAURANT', label: 'Restaurants' },
+  { value: 'CAFE', label: 'Cafés & salons de thé' },
+]
+
+const REGIONS = [
+  { value: '', label: 'Tous gouvernorats' },
+  ...GOVERNORATES.map((g) => ({ value: g.key, label: g.label })),
 ]
 
 export function DirectoryFilters({ lockCategory = false }: { lockCategory?: boolean }) {
@@ -44,8 +56,6 @@ export function DirectoryFilters({ lockCategory = false }: { lockCategory?: bool
     router.replace(pathname, { scroll: false })
   }
 
-  const sel = 'select-field px-3 py-2.5 text-sm'
-
   return (
     <>
       <button
@@ -74,23 +84,25 @@ export function DirectoryFilters({ lockCategory = false }: { lockCategory?: bool
 
       <div className={`${open ? 'grid' : 'hidden'} gap-3 rounded-2xl border border-border bg-card p-4 sm:grid-cols-2 lg:grid lg:grid-cols-4`}>
         {!lockCategory && (
-          <select className={sel} value={params.get('category') ?? ''} onChange={(e) => update('category', e.target.value || null)}>
-            <option value="">Toutes catégories</option>
-            <option value="RESTAURANT">Restaurants</option>
-            <option value="CAFE">Cafés & salons de thé</option>
-          </select>
+          <ListboxSelect
+            ariaLabel="Catégorie"
+            value={params.get('category') ?? ''}
+            options={CATEGORIES}
+            onChange={(v) => update('category', v || null)}
+          />
         )}
-        <select className={sel} value={params.get('region') ?? ''} onChange={(e) => update('region', e.target.value || null)}>
-          <option value="">Tous gouvernorats</option>
-          {GOVERNORATES.map((g) => (
-            <option key={g.key} value={g.key}>{g.label}</option>
-          ))}
-        </select>
-        <select className={sel} value={params.get('tri') ?? 'pertinence'} onChange={(e) => update('tri', e.target.value === 'pertinence' ? null : e.target.value)}>
-          {SORTS.map((s) => (
-            <option key={s.value} value={s.value}>{s.label}</option>
-          ))}
-        </select>
+        <ListboxSelect
+          ariaLabel="Gouvernorat"
+          value={params.get('region') ?? ''}
+          options={REGIONS}
+          onChange={(v) => update('region', v || null)}
+        />
+        <ListboxSelect
+          ariaLabel="Trier par"
+          value={params.get('tri') ?? 'pertinence'}
+          options={SORTS}
+          onChange={(v) => update('tri', v === 'pertinence' ? null : v)}
+        />
         <label className="flex items-center gap-2 text-sm font-semibold sm:col-span-2 lg:col-span-1">
           <input
             type="checkbox"
