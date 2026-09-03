@@ -4,7 +4,8 @@ import { revalidatePath, revalidateTag } from 'next/cache'
 import { db } from '@/lib/db'
 import { requireMerchant, requireUser } from '@/lib/session'
 import { TAG } from '@/lib/queries'
-import { sendEmail, layout, appUrl } from '@/lib/email'
+import { sendEmail, layout, appUrl, escapeHtml } from '@/lib/email'
+import { notify } from '@/lib/notifications'
 import { CONTACT_EMAIL } from '@/lib/constants'
 
 /** Le commerçant déclare avoir fait le virement. */
@@ -40,7 +41,7 @@ export async function declareBankTransfer(subscriptionId: string, formData: Form
     html: layout(
       'Règlement à vérifier',
       `<p><strong>${sub.business.name}</strong> a déclaré un virement de ${sub.pricePerYear} DT.<br/>
-       Référence : ${reference}</p>`,
+       Référence : ${escapeHtml(reference)}</p>`,
       { href: `${appUrl()}/admin/commerces/${sub.business.id}`, label: 'Vérifier' },
     ),
   })
@@ -56,7 +57,7 @@ export async function confirmPayment(paymentId: string) {
   const payment = await db.payment.findUnique({
     where: { id: paymentId },
     include: {
-      subscription: { include: { business: { include: { owner: { select: { email: true, name: true } } } } } },
+      subscription: { include: { business: { include: { owner: { select: { id: true, email: true, name: true } } } } } },
     },
   })
   if (!payment) return { error: 'Paiement introuvable.' }
@@ -64,7 +65,10 @@ export async function confirmPayment(paymentId: string) {
 
   const count = await db.payment.count({ where: { status: 'PAID' } })
   const invoiceNumber = payment.invoiceNumber ?? `BLA-${new Date().getFullYear()}-${String(count + 1).padStart(4, '0')}`
-  const periodEnd = new Date()
+  // Renouvellement : on prolonge depuis l'échéance en cours si elle est future.
+  const current = payment.subscription.currentPeriodEnd
+  const base = current && current > new Date() ? new Date(current) : new Date()
+  const periodEnd = new Date(base)
   periodEnd.setFullYear(periodEnd.getFullYear() + 1)
 
   await db.$transaction([
@@ -74,7 +78,7 @@ export async function confirmPayment(paymentId: string) {
     }),
     db.subscription.update({
       where: { id: payment.subscriptionId },
-      data: { status: 'ACTIVE', currentPeriodEnd: periodEnd },
+      data: { status: 'ACTIVE', currentPeriodEnd: periodEnd, renewalRemindedAt: null },
     }),
     db.auditLog.create({
       data: {
@@ -98,7 +102,16 @@ export async function confirmPayment(paymentId: string) {
     ),
   })
 
+  void notify({
+    userId: payment.subscription.business.owner.id,
+    type: 'payment.confirmed',
+    title: 'Paiement confirmé',
+    body: `Abonnement ${payment.subscription.business.name} actif jusqu'au ${new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium' }).format(periodEnd)}.`,
+    href: `/dashboard/${payment.subscription.business.id}`,
+  })
+
   revalidateTag(TAG.stats, 'max')
+  revalidateTag(TAG.businesses, 'max')
   revalidatePath(`/admin/commerces/${payment.subscription.business.id}`)
   return { ok: true, invoiceNumber }
 }

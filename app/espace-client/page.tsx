@@ -315,6 +315,12 @@ async function ProfilTab({ userId, name, email }: { userId: string; name: string
             </dd>
           </div>
         </dl>
+        <Link
+          href="/compte"
+          className="mt-6 inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-semibold hover:bg-secondary"
+        >
+          Mes données & suppression de compte
+        </Link>
       </div>
     </>
   )

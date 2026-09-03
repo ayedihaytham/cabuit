@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { Logo } from '@/components/layout/logo'
 import { LogoutButton } from '@/components/auth/logout-button'
+import { NotificationBell } from '@/components/app/notification-bell'
 
 export type NavItem = {
   key: string
@@ -104,6 +105,7 @@ export function AppShell({
           </div>
           <div className="flex items-center gap-2.5">
             {headerSlot}
+            <NotificationBell />
             <span className={`grid size-9 place-items-center rounded-full bg-gradient-to-br ${a.grad} text-sm font-bold text-primary-foreground shadow-sm`}>
               {initials(userName)}
             </span>

@@ -6,6 +6,7 @@ import { z } from 'zod'
 import { db } from '@/lib/db'
 import { requireUser, getManageableBusiness } from '@/lib/session'
 import { guard } from '@/lib/rate-limit'
+import { notify } from '@/lib/notifications'
 
 export type OfferState = { error?: string; ok?: boolean }
 
@@ -141,7 +142,7 @@ export async function claimOffer(
 
   const offer = await db.offer.findUnique({
     where: { id: offerId },
-    include: { business: { select: { slug: true } } },
+    include: { business: { select: { id: true, slug: true, name: true, ownerId: true } } },
   })
   if (!offer || offer.status !== 'ACTIVE') return { error: 'Bon plan indisponible.' }
   if (offer.validUntil && offer.validUntil < new Date()) return { error: 'Bon plan expiré.' }
@@ -166,6 +167,14 @@ export async function claimOffer(
     db.offerRedemption.create({ data: { offerId, userId: user.id, code } }),
     db.offer.update({ where: { id: offerId }, data: { redemptionCount: { increment: 1 } } }),
   ])
+
+  void notify({
+    userId: offer.business.ownerId,
+    type: 'offer.claimed',
+    title: 'Un bon plan récupéré',
+    body: `« ${offer.title} » vient d'être récupéré par un membre.`,
+    href: `/dashboard/${offer.business.id}`,
+  })
 
   revalidateTag(TAG.offers, 'max')
   return { ok: true, code }

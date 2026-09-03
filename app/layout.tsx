@@ -4,6 +4,7 @@ import { DM_Sans, Fraunces } from 'next/font/google'
 import './globals.css'
 import { BRAND, TAGLINE } from '@/lib/constants'
 import { CookieConsent } from '@/components/cookie-consent'
+import { PwaRegister } from '@/components/pwa-register'
 
 const dmSans = DM_Sans({ subsets: ['latin'], display: 'swap', variable: '--font-body' })
 const fraunces = Fraunces({ subsets: ['latin'], display: 'swap', variable: '--font-display-face' })
@@ -22,6 +23,8 @@ export const metadata: Metadata = {
   },
   description:
     'Winou regroupe les restaurants et cafés / salons de thé de Tunisie sur une seule plateforme : explorez les bons plans, les commerces exposent leur espace via un abonnement annuel.',
+  applicationName: BRAND,
+  appleWebApp: { capable: true, title: BRAND, statusBarStyle: 'default' },
   openGraph: {
     type: 'website',
     locale: 'fr_TN',
@@ -45,6 +48,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body className={`${dmSans.variable} ${fraunces.variable} antialiased`}>
         {children}
         <CookieConsent />
+        <PwaRegister />
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

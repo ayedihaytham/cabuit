@@ -6,6 +6,7 @@ import { z } from 'zod'
 import { db } from '@/lib/db'
 import { requireUser, getSessionUser, getManageableBusiness } from '@/lib/session'
 import { guard } from '@/lib/rate-limit'
+import { notify } from '@/lib/notifications'
 
 // ------------------------------------------------------------------
 // Favoris (client)
@@ -111,8 +112,18 @@ export async function moderateReview(reviewId: string, action: 'publish' | 'reje
   const review = await db.review.update({
     where: { id: reviewId },
     data: { status },
-    include: { business: { select: { id: true } } },
+    include: { business: { select: { id: true, name: true, ownerId: true } } },
   })
+
+  if (action === 'publish') {
+    void notify({
+      userId: review.business.ownerId,
+      type: 'review.published',
+      title: 'Nouvel avis publié',
+      body: `Un client a laissé un avis (${review.rating}/5) sur ${review.business.name}.`,
+      href: `/dashboard/${review.business.id}`,
+    })
+  }
 
   // Recalcule note + nombre d'avis publiés du commerce
   const agg = await db.review.aggregate({

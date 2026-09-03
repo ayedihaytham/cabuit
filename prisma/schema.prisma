@@ -124,6 +124,22 @@ model User {
   reportsClosed       Report[]          @relation("ReportResolver")
   paymentsLogged      Payment[]         @relation("PaymentRecordedBy")
   offerRedemptions    OfferRedemption[]
+  notifications       Notification[]
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  body      String?
+  href      String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, readAt])
+  @@index([userId, createdAt])
 }
 
 model Account {
@@ -253,6 +269,8 @@ model Subscription {
   trialEndsAt      DateTime?
   currentPeriodEnd DateTime?
   canceledAt       DateTime?
+  /** Dernière relance d'échéance envoyée (évite les doublons du cron). */
+  renewalRemindedAt DateTime?
 
   // Acceptation électronique des Conditions Générales d'Abonnement
   acceptedTermsAt DateTime

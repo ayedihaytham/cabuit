@@ -6,6 +6,7 @@ import { db } from '@/lib/db'
 import { requireUser } from '@/lib/session'
 import { TAG } from '@/lib/queries'
 import { sendEmail, layout, appUrl } from '@/lib/email'
+import { notify } from '@/lib/notifications'
 
 const TRANSITIONS: Record<string, BusinessStatus> = {
   approve: 'ACTIVE',
@@ -22,7 +23,7 @@ export async function moderateBusiness(businessId: string, action: keyof typeof 
 
   const business = await db.business.findUnique({
     where: { id: businessId },
-    include: { subscription: true, owner: { select: { email: true, name: true } } },
+    include: { subscription: true, owner: { select: { id: true, email: true, name: true } } },
   })
   if (!business) return { error: 'Commerce introuvable.' }
 
@@ -67,6 +68,22 @@ export async function moderateBusiness(businessId: string, action: keyof typeof 
          informations depuis votre tableau de bord et renvoyez-la.</p>`,
         { href: `${appUrl()}/dashboard`, label: 'Corriger ma fiche' },
       ),
+    })
+  }
+
+  const NOTIF: Record<string, { title: string; body: string }> = {
+    approve: { title: 'Fiche validée 🎉', body: `${business.name} est en ligne sur Winou.` },
+    reject: { title: 'Fiche à corriger', body: `${business.name} n'a pas pu être validée.` },
+    suspend: { title: 'Fiche suspendue', body: `${business.name} n'est plus visible.` },
+    reactivate: { title: 'Fiche réactivée', body: `${business.name} est de nouveau en ligne.` },
+  }
+  if (NOTIF[action]) {
+    void notify({
+      userId: business.owner.id,
+      type: `business.${action}`,
+      title: NOTIF[action].title,
+      body: NOTIF[action].body,
+      href: `/dashboard/${businessId}`,
     })
   }
 

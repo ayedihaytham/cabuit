@@ -15,6 +15,8 @@ export const metadata: Metadata = { title: 'Régler mon abonnement' }
 export const dynamic = 'force-dynamic'
 
 const fmt = (d: Date) => new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' }).format(d)
+const within30Days = (d: Date | null | undefined) =>
+  !!d && d.getTime() - Date.now() < 30 * 86_400_000
 
 export default async function PaiementPage({
   searchParams,
@@ -34,6 +36,7 @@ export default async function PaiementPage({
 
   const sub = business.subscription
   const pendingPayment = sub.payments.find((p) => p.status === 'PENDING')
+  const renewalDue = sub.status === 'ACTIVE' && within30Days(sub.currentPeriodEnd)
 
   return (
     <AppShell
@@ -92,12 +95,21 @@ export default async function PaiementPage({
               <p className="rounded-xl bg-ochre/15 px-4 py-3 text-sm font-medium text-ochre">
                 Virement déclaré (réf. {pendingPayment.reference}) — en cours de vérification.
               </p>
-            ) : sub.status === 'ACTIVE' ? (
+            ) : sub.status === 'ACTIVE' && !renewalDue ? (
               <p className="rounded-xl bg-olive/10 px-4 py-3 text-sm font-medium text-olive">
                 Abonnement actif jusqu’au {sub.currentPeriodEnd ? fmt(sub.currentPeriodEnd) : '—'}.
               </p>
             ) : (
-              <BankTransferForm subscriptionId={sub.id} />
+              <>
+                {renewalDue && (
+                  <p className="mb-3 rounded-xl bg-ochre/15 px-4 py-3 text-sm font-medium text-ochre">
+                    Renouvellement : votre abonnement expire le{' '}
+                    {sub.currentPeriodEnd ? fmt(sub.currentPeriodEnd) : '—'}. Déclarez votre virement
+                    pour prolonger d’un an.
+                  </p>
+                )}
+                <BankTransferForm subscriptionId={sub.id} />
+              </>
             )}
           </div>
         </Card>

@@ -47,6 +47,64 @@ async function _listActiveBusinesses(options: {
   })
 }
 
+export type BusinessSort = 'pertinence' | 'note' | 'nouveaute' | 'nom'
+export const PAGE_SIZE = 12
+
+type SearchOpts = {
+  query?: string
+  category?: Category
+  region?: string
+  city?: string
+  verifiedOnly?: boolean
+  sort?: BusinessSort
+  page?: number
+}
+
+/** Recherche paginée côté serveur — remplace le filtrage en mémoire. */
+export async function searchBusinesses(opts: SearchOpts) {
+  const { query, category, region, city, verifiedOnly, sort = 'pertinence' } = opts
+  const page = Math.max(1, opts.page ?? 1)
+  const term = query?.trim()
+
+  const where = {
+    status: 'ACTIVE' as const,
+    ...(category ? { category } : {}),
+    ...(region ? { region } : {}),
+    ...(city ? { city } : {}),
+    ...(verifiedOnly ? { verified: true } : {}),
+    ...(term
+      ? {
+          OR: [
+            { name: { contains: term, mode: 'insensitive' as const } },
+            { type: { contains: term, mode: 'insensitive' as const } },
+            { city: { contains: term, mode: 'insensitive' as const } },
+            { description: { contains: term, mode: 'insensitive' as const } },
+          ],
+        }
+      : {}),
+  }
+
+  const orderBy =
+    sort === 'note'
+      ? [{ verified: 'desc' as const }, { rating: 'desc' as const }]
+      : sort === 'nom'
+        ? [{ name: 'asc' as const }]
+        : [{ createdAt: 'desc' as const }]
+
+  const [rows, total] = await Promise.all([
+    db.business.findMany({
+      where,
+      orderBy,
+      skip: (page - 1) * PAGE_SIZE,
+      take: PAGE_SIZE,
+      include: { photos: { orderBy: { position: 'asc' }, take: 1 } },
+    }),
+    db.business.count({ where }),
+  ])
+
+  return { rows, total, page, pageCount: Math.max(1, Math.ceil(total / PAGE_SIZE)) }
+}
+
 /** Slugs des fiches en ligne — pour le sitemap. */
 export async function listBusinessSlugs() {
   return db.business.findMany({
@@ -492,4 +550,125 @@ function daysAgo(n: number) {
   const d = new Date()
   d.setDate(d.getDate() - n)
   return d
+}
+
+// ------------------------------------------------------------------
+// Analytics fondateur
+// ------------------------------------------------------------------
+
+function dailyBuckets(rows: { createdAt: Date }[], days = 30) {
+  const key = (d: Date) => d.toISOString().slice(0, 10)
+  const counts = new Map<string, number>()
+  for (const r of rows) counts.set(key(r.createdAt), (counts.get(key(r.createdAt)) ?? 0) + 1)
+  const out: { date: string; count: number }[] = []
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date()
+    d.setDate(d.getDate() - i)
+    out.push({ date: key(d), count: counts.get(key(d)) ?? 0 })
+  }
+  return out
+}
+
+export async function getFounderAnalytics() {
+  const since = daysAgo(30)
+
+  const [
+    views30,
+    signups30,
+    signupRows,
+    redemptionRows,
+    usedAtCounter30,
+    distinctClaimers,
+    newBusinessRows,
+    subsByStatus,
+    paidSubs,
+    topViewed,
+    topOffers,
+    searchRows,
+    regionRows,
+  ] = await Promise.all([
+    db.event.count({ where: { type: 'BUSINESS_VIEW', createdAt: { gte: since } } }),
+    db.user.count({ where: { createdAt: { gte: since } } }),
+    db.user.findMany({ where: { createdAt: { gte: since } }, select: { createdAt: true } }),
+    db.offerRedemption.findMany({ where: { createdAt: { gte: since } }, select: { createdAt: true } }),
+    db.offerRedemption.count({ where: { usedAt: { gte: since } } }),
+    db.offerRedemption.findMany({
+      where: { createdAt: { gte: since } },
+      select: { userId: true },
+      distinct: ['userId'],
+    }),
+    db.business.findMany({
+      where: { status: 'ACTIVE', createdAt: { gte: since } },
+      select: { createdAt: true },
+    }),
+    db.subscription.groupBy({ by: ['status'], _count: true }),
+    db.subscription.count({ where: { payments: { some: { status: 'PAID' } } } }),
+    db.event.groupBy({
+      by: ['businessId'],
+      where: { type: 'BUSINESS_VIEW', createdAt: { gte: since }, businessId: { not: null } },
+      _count: true,
+      orderBy: { _count: { businessId: 'desc' } },
+      take: 6,
+    }),
+    db.offer.findMany({
+      where: { redemptionCount: { gt: 0 } },
+      orderBy: { redemptionCount: 'desc' },
+      take: 6,
+      select: { title: true, redemptionCount: true, business: { select: { name: true, slug: true } } },
+    }),
+    db.event.groupBy({
+      by: ['query'],
+      where: { type: 'SEARCH', createdAt: { gte: since }, query: { not: null } },
+      _count: true,
+      orderBy: { _count: { query: 'desc' } },
+      take: 8,
+    }),
+    db.business.groupBy({ by: ['region'], where: { status: 'ACTIVE' }, _count: true }),
+  ])
+
+  const viewedIds = topViewed.map((t) => t.businessId!).filter(Boolean)
+  const viewedNames = viewedIds.length
+    ? await db.business.findMany({ where: { id: { in: viewedIds } }, select: { id: true, name: true, slug: true } })
+    : []
+  const nameById = new Map(viewedNames.map((b) => [b.id, b]))
+
+  const subMap = Object.fromEntries(subsByStatus.map((r) => [r.status, r._count])) as Record<string, number>
+  const trialing = subMap.TRIALING ?? 0
+  const totalSubs = subsByStatus.reduce((s, r) => s + r._count, 0)
+
+  return {
+    funnel: {
+      views: views30,
+      signups: signups30,
+      claimers: distinctClaimers.length,
+      usedAtCounter: usedAtCounter30,
+    },
+    series: {
+      signups: dailyBuckets(signupRows),
+      redemptions: dailyBuckets(redemptionRows),
+      newBusinesses: dailyBuckets(newBusinessRows),
+    },
+    conversion: {
+      trialing,
+      paid: paidSubs,
+      totalSubs,
+      rate: totalSubs ? Math.round((paidSubs / totalSubs) * 100) : 0,
+    },
+    topViewed: topViewed.map((t) => ({
+      name: nameById.get(t.businessId!)?.name ?? '—',
+      slug: nameById.get(t.businessId!)?.slug ?? '',
+      views: t._count,
+    })),
+    topOffers: topOffers.map((o) => ({
+      title: o.title,
+      business: o.business.name,
+      slug: o.business.slug,
+      count: o.redemptionCount,
+    })),
+    topSearches: searchRows.map((s) => ({ query: s.query ?? '', count: s._count })),
+    regions: regionRows
+      .filter((r) => r.region)
+      .map((r) => ({ region: r.region as string, count: r._count }))
+      .sort((a, b) => b.count - a.count),
+  }
 }

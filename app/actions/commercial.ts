@@ -10,6 +10,7 @@ import { onboardSchema } from '@/lib/validations'
 import { getPlan, TRIAL_DAYS } from '@/lib/data/plans'
 import { TAG } from '@/lib/queries'
 import { sendEmail, layout, appUrl, escapeHtml } from '@/lib/email'
+import { notify } from '@/lib/notifications'
 import { guard } from '@/lib/rate-limit'
 
 export type OnboardState = {
@@ -145,6 +146,15 @@ export async function claimBusiness(businessId: string): Promise<{ ok?: boolean;
   await db.auditLog.create({
     data: { actorId: user.id, action: 'business.claim', entity: 'Business', entityId: businessId },
   })
+  if (biz.createdById) {
+    void notify({
+      userId: biz.createdById,
+      type: 'business.claimed',
+      title: 'Un gérant a repris la main',
+      body: `${biz.name} est désormais géré par son propriétaire.`,
+      href: `/commercial/${businessId}`,
+    })
+  }
   revalidatePath(`/dashboard/${businessId}`)
   revalidatePath('/commercial')
   return { ok: true }

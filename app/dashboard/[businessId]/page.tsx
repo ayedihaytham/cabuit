@@ -19,6 +19,9 @@ import type { WeekHours } from '@/lib/hours'
 
 export const dynamic = 'force-dynamic'
 
+const within30Days = (d: Date | null | undefined) =>
+  !!d && d.getTime() - Date.now() < 30 * 86_400_000
+
 export default async function ManageBusinessPage({
   params,
   searchParams,
@@ -93,6 +96,25 @@ export default async function ManageBusinessPage({
                 className="inline-flex items-center gap-2 rounded-full bg-terracotta px-4 py-2 text-xs font-bold text-primary-foreground"
               >
                 <CreditCard className="size-3.5" /> Régler l’abonnement
+              </Link>
+            </div>
+          )}
+
+        {business.subscription?.status === 'ACTIVE' &&
+          within30Days(business.subscription.currentPeriodEnd) && (
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-ochre/30 bg-ochre/[0.08] px-4 py-3 text-sm">
+              <span className="font-medium">
+                Abonnement à renouveler avant le{' '}
+                {new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' }).format(
+                  business.subscription.currentPeriodEnd ?? undefined,
+                )}
+                .
+              </span>
+              <Link
+                href={`/paiement?business=${business.id}`}
+                className="inline-flex items-center gap-2 rounded-full bg-ochre px-4 py-2 text-xs font-bold text-foreground"
+              >
+                <CreditCard className="size-3.5" /> Renouveler
               </Link>
             </div>
           )}
