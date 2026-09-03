@@ -93,9 +93,7 @@ export function AppShell({
         <div className="mx-auto flex max-w-[88rem] items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-10">
           <div className="flex items-center gap-2.5">
             <Logo href={homeHref} tone="terracotta" className="text-xl" />
-            <span className={`hidden rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.16em] sm:inline ${a.chip}`}>
-              {roleLabel}
-            </span>
+            <span className="sr-only">{roleLabel}</span>
           </div>
           <div className="flex items-center gap-2.5">
             {headerSlot}
@@ -116,10 +114,7 @@ export function AppShell({
               <span className={`grid size-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br ${a.grad} text-xs font-bold text-primary-foreground`}>
                 {initials(userName)}
               </span>
-              <div className="min-w-0">
-                <p className="truncate text-sm font-bold">{userName}</p>
-                <p className={`text-[11px] font-semibold uppercase tracking-wide ${a.text}`}>{roleLabel}</p>
-              </div>
+              <p className="min-w-0 truncate text-sm font-bold">{userName}</p>
             </div>
           )}
 

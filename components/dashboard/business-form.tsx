@@ -50,9 +50,15 @@ const TYPE_SUGGESTIONS = [
 export function BusinessForm({ action, values = {}, submitLabel }: BusinessFormProps) {
   const [state, formAction, pending] = useActionState<FormState, FormData>(action, {})
   const err = (field: string) => state.fieldErrors?.[field]?.[0]
+  const hasErrors = Boolean(state.fieldErrors && Object.keys(state.fieldErrors).length > 0)
 
   return (
     <form action={formAction} className="grid gap-5 sm:grid-cols-2">
+      {(hasErrors || state.error) && (
+        <div className="sm:col-span-2 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">
+          {state.error ?? 'Certains champs sont incomplets ou incorrects — voir les messages en rouge ci-dessous.'}
+        </div>
+      )}
       <Field label="Nom de l'établissement" name="name" defaultValue={values.name} error={err('name')} required className="sm:col-span-2" />
 
       <label className="field-label">
@@ -72,7 +78,7 @@ export function BusinessForm({ action, values = {}, submitLabel }: BusinessFormP
           defaultValue={values.type}
           placeholder="Choisir ou saisir…"
           required
-          className="field-input"
+          className={`field-input ${err('type') ? 'border-destructive' : ''}`}
         />
         <datalist id="type-suggestions">
           {TYPE_SUGGESTIONS.map((t) => (
@@ -84,7 +90,7 @@ export function BusinessForm({ action, values = {}, submitLabel }: BusinessFormP
 
       <label className="field-label">
         Gouvernorat <span className="text-terracotta">*</span>
-        <select name="region" defaultValue={values.region ?? ''} className="field-input" required>
+        <select name="region" defaultValue={values.region ?? ''} className={`field-input ${err('region') ? 'border-destructive' : ''}`} required>
           <option value="" disabled>
             Choisir…
           </option>
@@ -100,7 +106,8 @@ export function BusinessForm({ action, values = {}, submitLabel }: BusinessFormP
 
       <label className="field-label sm:col-span-2">
         Description
-        <textarea name="description" defaultValue={values.description} className="field-input min-h-28 resize-y" required />
+        <textarea name="description" defaultValue={values.description} className={`field-input min-h-28 resize-y ${err('description') ? 'border-destructive' : ''}`} required />
+        <span className="text-xs text-muted-foreground">20 caractères minimum.</span>
         {err('description') && <span className="text-xs font-medium text-destructive">{err('description')}</span>}
       </label>
 
@@ -108,9 +115,6 @@ export function BusinessForm({ action, values = {}, submitLabel }: BusinessFormP
       <Field label="WhatsApp" name="whatsapp" placeholder="21620000000" defaultValue={values.whatsapp} error={err('whatsapp')} />
       <Field label="Instagram" name="instagram" placeholder="@moncommerce" defaultValue={values.instagram} error={err('instagram')} className="sm:col-span-2" />
 
-      {state.error && (
-        <p className="sm:col-span-2 rounded-xl bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">{state.error}</p>
-      )}
       {state.ok && (
         <p className="sm:col-span-2 inline-flex items-center gap-2 rounded-xl bg-olive/10 px-4 py-3 text-sm font-medium text-olive">
           <Check className="size-4" /> Modifications enregistrées.
@@ -150,7 +154,13 @@ function Field({
   return (
     <label className={`field-label ${className ?? ''}`}>
       {label} {required && <span className="text-terracotta">*</span>}
-      <input name={name} defaultValue={defaultValue} placeholder={placeholder} required={required} className="field-input" />
+      <input
+        name={name}
+        defaultValue={defaultValue}
+        placeholder={placeholder}
+        required={required}
+        className={`field-input ${error ? 'border-destructive' : ''}`}
+      />
       {error && <span className="text-xs font-medium text-destructive">{error}</span>}
     </label>
   )

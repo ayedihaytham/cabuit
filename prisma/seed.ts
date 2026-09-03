@@ -69,7 +69,7 @@ async function main() {
   for (const b of BUSINESSES) {
     const business = await db.business.upsert({
       where: { slug: b.slug },
-      update: { region: regionForCity(b.city) },
+      update: { region: regionForCity(b.city), ownerId: merchant.id },
       create: {
         ownerId: merchant.id,
         name: b.name,
