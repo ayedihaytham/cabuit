@@ -122,6 +122,45 @@
 .field-input:hover { border-color: color-mix(in oklch, var(--foreground) 28%, transparent); }
 textarea.field-input { min-height: 7rem; resize: vertical; }
 
+/* Sélecteur natif harmonisé : on masque la flèche OS et on pose la nôtre. */
+.select-field,
+select.field-input {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  cursor: pointer;
+  padding-right: 2.5rem;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239a8f82' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpath d='m6 9 6 6 6-6'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.85rem center;
+  background-size: 1rem;
+}
+.select-field::-ms-expand,
+select.field-input::-ms-expand { display: none; }
+
+/* Bordure/rayon/focus cohérents pour les selects "compacts" (filtres, rôle…). */
+.select-field {
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background-color: var(--card);
+  color: var(--foreground);
+  font: inherit;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+.select-field:focus {
+  outline: none;
+  border-color: var(--terracotta);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--terracotta) 18%, transparent);
+}
+.select-field:hover { border-color: color-mix(in oklch, var(--foreground) 28%, transparent); }
+
+/* Liste déroulante : suit la palette là où le navigateur l'autorise. */
+.select-field option,
+select.field-input option {
+  background-color: var(--card);
+  color: var(--foreground);
+}
+
 @media (max-width: 639px) {
   .field-input { min-height: 3rem; padding: 0.72rem 0.8rem; }
   textarea.field-input { min-height: 8rem; }

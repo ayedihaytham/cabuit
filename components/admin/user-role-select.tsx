@@ -44,7 +44,7 @@ export function UserRoleSelect({
         value={value}
         disabled={disabled || pending}
         onChange={(e) => change(e.target.value as Role)}
-        className="rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-semibold disabled:opacity-50"
+        className="select-field px-2.5 py-1.5 text-xs font-semibold disabled:opacity-50"
       >
         {ROLES.map((r) => (
           <option key={r.value} value={r.value}>

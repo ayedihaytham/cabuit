@@ -44,8 +44,7 @@ export function DirectoryFilters({ lockCategory = false }: { lockCategory?: bool
     router.replace(pathname, { scroll: false })
   }
 
-  const sel =
-    'rounded-xl border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-terracotta'
+  const sel = 'select-field px-3 py-2.5 text-sm'
 
   return (
     <>

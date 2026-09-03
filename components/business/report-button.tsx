@@ -19,7 +19,7 @@ export function ReportButton({ businessId }: { businessId: string }) {
 
       {open && !state.ok && (
         <form action={formAction} className="mt-3 max-w-md space-y-3 rounded-xl border border-border bg-card p-4">
-          <select name="reason" className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm">
+          <select name="reason" className="select-field w-full px-3 py-2 text-sm">
             {REASONS.map((r) => (
               <option key={r}>{r}</option>
             ))}
