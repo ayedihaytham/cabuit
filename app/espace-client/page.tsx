@@ -344,7 +344,7 @@ function PlaceCard({
   return (
     <article className="group overflow-hidden rounded-3xl border border-border bg-card transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_44px_rgba(53,41,30,0.12)]">
       <div className="relative h-44 bg-secondary">
-        <Cover src={image ?? '/images/restaurant.png'} alt={name} sizes="(max-width:640px) 100vw, 360px" className="transition-transform duration-500 group-hover:scale-105" />
+        <Cover src={image ?? ''} alt={name} sizes="(max-width:640px) 100vw, 360px" className="transition-transform duration-500 group-hover:scale-105" />
         <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/45 to-transparent" />
         <div className="absolute right-3 top-3">
           <FavoriteToggleDb businessId={businessId} businessName={name} initialFavorited={favorited} />

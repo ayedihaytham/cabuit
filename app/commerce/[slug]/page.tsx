@@ -61,7 +61,7 @@ export default async function CommercePage({ params }: { params: Promise<{ slug:
 
   const codeByOffer = new Map(myRedemptions.map((r) => [r.offerId, r.code]))
 
-  const cover = business.photos[0]?.url ?? '/images/restaurant.png'
+  const cover = business.photos[0]?.url ?? ''
   const avg =
     business.reviews.length > 0
       ? business.reviews.reduce((s, r) => s + r.rating, 0) / business.reviews.length
@@ -74,7 +74,7 @@ export default async function CommercePage({ params }: { params: Promise<{ slug:
     name: business.name,
     description: business.description,
     url: `${appUrl()}/commerce/${business.slug}`,
-    image: cover.startsWith('http') ? cover : `${appUrl()}${cover}`,
+    ...(cover ? { image: cover.startsWith('http') ? cover : `${appUrl()}${cover}` } : {}),
     address: { '@type': 'PostalAddress', streetAddress: business.address, addressLocality: business.city, addressCountry: 'TN' },
     ...(business.phone ? { telephone: business.phone } : {}),
     ...(business.lat && business.lng

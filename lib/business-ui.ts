@@ -6,12 +6,7 @@ const CATEGORY_UI: Record<DbCategory, UiCategory> = {
   CAFE: 'Cafés & salons de thé',
 }
 
-const FALLBACK_IMAGE: Record<DbCategory, string> = {
-  RESTAURANT: '/images/restaurant.png',
-  CAFE: '/images/cafe.png',
-}
-
-/** DB -> forme attendue par les composants d'annuaire (BusinessCard, DirectoryBrowser). */
+/** DB -> forme attendue par les composants d'annuaire. `image` vide = pas de photo (placeholder). */
 export function toUiBusiness(row: DbBusiness & { photos?: BusinessPhoto[] }): UiBusiness {
   return {
     slug: row.slug,
@@ -21,7 +16,7 @@ export function toUiBusiness(row: DbBusiness & { photos?: BusinessPhoto[] }): Ui
     city: row.city,
     address: row.address,
     description: row.description,
-    image: row.photos?.[0]?.url ?? FALLBACK_IMAGE[row.category],
+    image: row.photos?.[0]?.url ?? '',
     verified: row.verified,
     rating: row.rating,
     reviewCount: row.reviewCount,
