@@ -16,6 +16,13 @@ export const businessSchema = z.object({
 
 export type BusinessInput = z.infer<typeof businessSchema>
 
+/** Onboarding par un commercial : fiche + coordonnées du gérant. */
+export const onboardSchema = businessSchema.extend({
+  ownerName: z.string().trim().min(2, 'Nom du gérant requis').max(80),
+  ownerEmail: z.string().trim().toLowerCase().email('Email du gérant invalide'),
+  ownerPhone: z.string().trim().max(30).optional().or(z.literal('')),
+})
+
 export const submitSchema = z.object({
   tier: z.enum(['ESSENTIEL', 'POPULAIRE', 'PREMIUM']),
   acceptTerms: z.literal('on', { message: "Vous devez accepter les Conditions Générales d'Abonnement" }),

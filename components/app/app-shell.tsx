@@ -13,7 +13,7 @@ export type NavItem = {
   section?: string
 }
 
-type Accent = 'terracotta' | 'olive' | 'ink'
+type Accent = 'terracotta' | 'olive' | 'ink' | 'ochre'
 
 type AppShellProps = {
   roleLabel: string
@@ -51,6 +51,13 @@ const ACCENT: Record<Accent, { text: string; bar: string; tint: string; grad: st
     tint: 'bg-foreground/[0.06]',
     grad: 'from-foreground to-[#5b4a3a]',
     chip: 'bg-foreground/10 text-foreground',
+  },
+  ochre: {
+    text: 'text-ochre',
+    bar: 'bg-ochre',
+    tint: 'bg-ochre/[0.12]',
+    grad: 'from-ochre to-terracotta',
+    chip: 'bg-ochre/15 text-ochre',
   },
 }
 

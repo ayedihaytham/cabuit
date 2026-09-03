@@ -6,6 +6,7 @@ import { adminSetUserRole } from '@/app/actions/admin'
 const ROLES = [
   { value: 'CLIENT', label: 'Client' },
   { value: 'MERCHANT', label: 'Commerçant' },
+  { value: 'COMMERCIAL', label: 'Commercial' },
   { value: 'ADMIN', label: 'Admin' },
 ] as const
 

@@ -4,6 +4,7 @@ import { ArrowLeft, CreditCard, ExternalLink, Eye, Phone, Star } from 'lucide-re
 import { AppShell } from '@/components/app/app-shell'
 import { MERCHANT_NAV } from '@/lib/nav'
 import { BusinessForm } from '@/components/dashboard/business-form'
+import { ClaimButton } from '@/components/dashboard/claim-button'
 import { SubmitForReview } from '@/components/dashboard/submit-for-review'
 import { MenuEditor } from '@/components/dashboard/menu-editor'
 import { OfferManager } from '@/components/dashboard/offer-manager'
@@ -65,6 +66,7 @@ export default async function ManageBusinessPage({
             Brouillon créé. Complétez la fiche puis envoyez-la à validation.
           </p>
         )}
+        {business.createdById && !business.claimedByOwnerAt && <ClaimButton businessId={business.id} />}
         {business.status === 'PENDING' && (
           <p className="mt-4 rounded-xl bg-ochre/15 px-4 py-3 text-sm font-medium text-ochre">
             Fiche en cours de validation par l’équipe Winou.

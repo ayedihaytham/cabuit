@@ -9,6 +9,8 @@ export default async function AfterLoginPage() {
       redirect('/admin')
     case 'MERCHANT':
       redirect('/dashboard')
+    case 'COMMERCIAL':
+      redirect('/commercial')
     case 'CLIENT':
       redirect('/espace-client')
     default:

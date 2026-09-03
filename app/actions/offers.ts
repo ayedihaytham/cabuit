@@ -4,7 +4,7 @@ import { revalidatePath, revalidateTag } from 'next/cache'
 import { TAG } from '@/lib/queries'
 import { z } from 'zod'
 import { db } from '@/lib/db'
-import { requireUser, requireMerchant } from '@/lib/session'
+import { requireUser, getManageableBusiness } from '@/lib/session'
 import { guard } from '@/lib/rate-limit'
 
 export type OfferState = { error?: string; ok?: boolean }
@@ -30,14 +30,10 @@ const offerSchema = z.object({
   maxRedemptions: z.coerce.number().int().min(0).max(100000).default(0),
 })
 
-async function assertActiveBusiness(businessId: string, ownerId: string) {
-  const biz = await db.business.findFirst({
-    where: { id: businessId, ownerId },
-    select: { id: true, slug: true, status: true },
-  })
-  if (!biz) throw new Error('Établissement introuvable')
-  if (biz.status !== 'ACTIVE') throw new Error('Publiez d’abord votre fiche (abonnement actif requis).')
-  return biz
+async function manageableOfferBusiness(businessId: string) {
+  const ctx = await getManageableBusiness(businessId)
+  if (!ctx) return { error: 'Accès refusé à cette fiche.' as string }
+  return { slug: ctx.business.slug }
 }
 
 export async function createOffer(
@@ -45,13 +41,8 @@ export async function createOffer(
   _prev: OfferState,
   formData: FormData,
 ): Promise<OfferState> {
-  const user = await requireMerchant()
-  let biz
-  try {
-    biz = await assertActiveBusiness(businessId, user.id)
-  } catch (e) {
-    return { error: (e as Error).message }
-  }
+  const biz = await manageableOfferBusiness(businessId)
+  if ('error' in biz) return biz
 
   const parsed = offerSchema.safeParse(Object.fromEntries(formData))
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Formulaire invalide.' }
@@ -71,18 +62,26 @@ export async function createOffer(
   })
 
   revalidatePath(`/dashboard/${businessId}`)
+  revalidatePath(`/commercial/${businessId}`)
   revalidatePath(`/commerce/${biz.slug}`)
   revalidateTag(TAG.offers, 'max')
   revalidateTag(TAG.stats, 'max')
   return { ok: true }
 }
 
-export async function toggleOffer(offerId: string) {
-  const user = await requireMerchant()
-  const offer = await db.offer.findFirst({
-    where: { id: offerId, business: { ownerId: user.id } },
+async function manageableOffer(offerId: string) {
+  const offer = await db.offer.findUnique({
+    where: { id: offerId },
     include: { business: { select: { id: true, slug: true } } },
   })
+  if (!offer) return null
+  const ctx = await getManageableBusiness(offer.business.id)
+  if (!ctx) return null
+  return offer
+}
+
+export async function toggleOffer(offerId: string) {
+  const offer = await manageableOffer(offerId)
   if (!offer) return { error: 'Bon plan introuvable.' }
 
   await db.offer.update({
@@ -90,38 +89,36 @@ export async function toggleOffer(offerId: string) {
     data: { status: offer.status === 'ACTIVE' ? 'PAUSED' : 'ACTIVE' },
   })
   revalidatePath(`/dashboard/${offer.business.id}`)
+  revalidatePath(`/commercial/${offer.business.id}`)
   revalidateTag(TAG.offers, 'max')
   return { ok: true }
 }
 
 export async function deleteOffer(offerId: string) {
-  const user = await requireMerchant()
-  const offer = await db.offer.findFirst({
-    where: { id: offerId, business: { ownerId: user.id } },
-    include: { business: { select: { id: true, slug: true } } },
-  })
+  const offer = await manageableOffer(offerId)
   if (!offer) return { error: 'Bon plan introuvable.' }
   await db.offer.delete({ where: { id: offerId } })
   revalidatePath(`/dashboard/${offer.business.id}`)
+  revalidatePath(`/commercial/${offer.business.id}`)
   revalidatePath(`/commerce/${offer.business.slug}`)
   revalidateTag(TAG.offers, 'max')
   return { ok: true }
 }
 
-/** Le commerçant valide un code présenté au comptoir. */
+/** Le gérant (ou commercial) valide un code présenté au comptoir. */
 export async function markRedemptionUsed(code: string) {
-  const user = await requireMerchant()
   const redemption = await db.offerRedemption.findUnique({
     where: { code: code.trim().toUpperCase() },
-    include: { offer: { include: { business: { select: { ownerId: true, id: true } } } } },
+    include: { offer: { include: { business: { select: { id: true } } } } },
   })
-  if (!redemption || redemption.offer.business.ownerId !== user.id) {
-    return { error: 'Code inconnu.' }
-  }
+  if (!redemption) return { error: 'Code inconnu.' }
+  const ctx = await getManageableBusiness(redemption.offer.business.id)
+  if (!ctx) return { error: 'Code inconnu.' }
   if (redemption.usedAt) return { error: 'Ce code a déjà été utilisé.' }
 
   await db.offerRedemption.update({ where: { id: redemption.id }, data: { usedAt: new Date() } })
   revalidatePath(`/dashboard/${redemption.offer.business.id}`)
+  revalidatePath(`/commercial/${redemption.offer.business.id}`)
   return { ok: true }
 }
 

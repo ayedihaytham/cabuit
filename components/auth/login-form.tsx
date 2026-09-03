@@ -21,6 +21,7 @@ export function LoginForm({ variant, googleEnabled = false }: LoginFormProps) {
   const HOME_BY_ROLE: Record<string, string> = {
     ADMIN: '/admin',
     MERCHANT: '/dashboard',
+    COMMERCIAL: '/commercial',
     CLIENT: '/espace-client',
   }
 

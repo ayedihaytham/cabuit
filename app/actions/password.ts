@@ -2,7 +2,9 @@
 
 import bcrypt from 'bcryptjs'
 import { z } from 'zod'
+import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
+import { getSessionUser } from '@/lib/session'
 import { createResetToken, consumeResetToken } from '@/lib/tokens'
 import { sendEmail, layout, appUrl } from '@/lib/email'
 import { guard } from '@/lib/rate-limit'
@@ -50,7 +52,29 @@ export async function resetPassword(_prev: ResetState, formData: FormData): Prom
 
   await db.user.update({
     where: { email },
-    data: { passwordHash: await bcrypt.hash(parsed.data.password, 10) },
+    data: { passwordHash: await bcrypt.hash(parsed.data.password, 10), mustChangePassword: false },
   })
   return { ok: true }
+}
+
+/** Changement de mot de passe par un utilisateur connecté (ex. mot de passe temporaire). */
+export async function changeMyPassword(_prev: ResetState, formData: FormData): Promise<ResetState> {
+  const session = await getSessionUser()
+  if (!session) redirect('/connexion')
+
+  const parsed = z
+    .object({ password: z.string().min(8, '8 caractères minimum') })
+    .safeParse(Object.fromEntries(formData))
+  if (!parsed.success) return { error: parsed.error.issues[0].message }
+
+  const current = await db.user.findUnique({ where: { id: session.id }, select: { passwordHash: true } })
+  if (current?.passwordHash && (await bcrypt.compare(parsed.data.password, current.passwordHash))) {
+    return { error: 'Choisissez un mot de passe différent du mot de passe temporaire.' }
+  }
+
+  await db.user.update({
+    where: { id: session.id },
+    data: { passwordHash: await bcrypt.hash(parsed.data.password, 10), mustChangePassword: false },
+  })
+  redirect('/dashboard')
 }

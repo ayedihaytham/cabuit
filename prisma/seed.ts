@@ -64,14 +64,30 @@ async function main() {
     },
   })
 
+  // --- Commercial de démonstration ---
+  const commercial = await db.user.upsert({
+    where: { email: 'commercial@winou.tn' },
+    update: { role: 'COMMERCIAL' },
+    create: {
+      email: 'commercial@winou.tn',
+      name: 'Commercial démo',
+      role: 'COMMERCIAL',
+      passwordHash: await bcrypt.hash('demo1234', 10),
+      emailVerified: new Date(),
+    },
+  })
+
   const TIER_PRICE = { ESSENTIEL: 200, POPULAIRE: 300, PREMIUM: 500 } as const
+  const ONBOARDED_BY_COMMERCIAL = new Set(['cafe-panorama', 'salon-el-bahia'])
 
   for (const b of BUSINESSES) {
+    const createdById = ONBOARDED_BY_COMMERCIAL.has(b.slug) ? commercial.id : null
     const business = await db.business.upsert({
       where: { slug: b.slug },
-      update: { region: regionForCity(b.city), ownerId: merchant.id },
+      update: { region: regionForCity(b.city), ownerId: merchant.id, createdById },
       create: {
         ownerId: merchant.id,
+        createdById,
         name: b.name,
         slug: b.slug,
         category: toDbCategory(b.category),

@@ -4,7 +4,7 @@ import { revalidatePath, revalidateTag } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
 import { db } from '@/lib/db'
-import { requireUser } from '@/lib/session'
+import { requireUser, getManageableBusiness } from '@/lib/session'
 import { slugify } from '@/lib/slug'
 import { businessSchema, submitSchema } from '@/lib/validations'
 import { PLANS } from '@/lib/data/plans'
@@ -54,17 +54,16 @@ export async function createBusiness(_prev: FormState, formData: FormData): Prom
   redirect(`/dashboard/${business.id}?created=1`)
 }
 
-/** Met à jour la fiche (propriétaire uniquement). */
+/** Met à jour la fiche (gérant, admin, ou commercial l'ayant onboardée avant reprise). */
 export async function updateBusiness(businessId: string, _prev: FormState, formData: FormData): Promise<FormState> {
-  const user = await requireUser(['MERCHANT'])
-  const existing = await db.business.findFirst({ where: { id: businessId, ownerId: user.id } })
-  if (!existing) return { error: 'Établissement introuvable.' }
+  const ctx = await getManageableBusiness(businessId)
+  if (!ctx) return { error: 'Accès refusé à cette fiche.' }
 
   const parsed = businessSchema.safeParse(Object.fromEntries(formData))
   if (!parsed.success) return { fieldErrors: parsed.error.flatten().fieldErrors }
   const data = parsed.data
 
-  await db.business.update({
+  const biz = await db.business.update({
     where: { id: businessId },
     data: {
       name: data.name,
@@ -81,6 +80,8 @@ export async function updateBusiness(businessId: string, _prev: FormState, formD
   })
 
   revalidatePath(`/dashboard/${businessId}`)
+  revalidatePath(`/commercial/${businessId}`)
+  revalidatePath(`/commerce/${biz.slug}`)
   revalidateTag(TAG.businesses, 'max')
   return { ok: true }
 }

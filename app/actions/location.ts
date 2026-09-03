@@ -2,7 +2,7 @@
 
 import { revalidatePath, revalidateTag } from 'next/cache'
 import { db } from '@/lib/db'
-import { requireMerchant } from '@/lib/session'
+import { getManageableBusiness } from '@/lib/session'
 import { TAG } from '@/lib/queries'
 import { DAYS, type WeekHours } from '@/lib/hours'
 
@@ -22,12 +22,9 @@ function parseCoords(input: string): { lat: number; lng: number } | null {
 }
 
 export async function updateLocationHours(businessId: string, formData: FormData) {
-  const user = await requireMerchant()
-  const biz = await db.business.findFirst({
-    where: { id: businessId, ownerId: user.id },
-    select: { id: true, slug: true },
-  })
-  if (!biz) return { error: 'Établissement introuvable.' }
+  const ctx = await getManageableBusiness(businessId)
+  if (!ctx) return { error: 'Accès refusé à cette fiche.' }
+  const biz = ctx.business
 
   const mapInput = String(formData.get('mapUrl') ?? '')
   const coords = mapInput ? parseCoords(mapInput) : null
@@ -50,6 +47,7 @@ export async function updateLocationHours(businessId: string, formData: FormData
   })
 
   revalidatePath(`/dashboard/${businessId}`)
+  revalidatePath(`/commercial/${businessId}`)
   revalidatePath(`/commerce/${biz.slug}`)
   revalidateTag(TAG.businesses, 'max')
   return { ok: true, coords: Boolean(coords) }

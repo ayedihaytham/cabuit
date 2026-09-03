@@ -166,7 +166,7 @@ export async function markContactHandled(id: string) {
 // Utilisateurs
 // ------------------------------------------------------------------
 
-const ROLES = ['CLIENT', 'MERCHANT', 'ADMIN'] as const
+const ROLES = ['CLIENT', 'MERCHANT', 'COMMERCIAL', 'ADMIN'] as const
 type RoleValue = (typeof ROLES)[number]
 
 export async function adminSetUserRole(userId: string, role: RoleValue) {

@@ -381,6 +381,88 @@ export async function listClientsForAdmin() {
   })
 }
 
+// ------------------------------------------------------------------
+// Espace commercial
+// ------------------------------------------------------------------
+
+/** Chiffres plateforme (argumentaire de vente) + portefeuille du commercial. */
+export async function getCommercialData(userId: string) {
+  const since = daysAgo(30)
+  const mine = { createdById: userId }
+  const [
+    clients,
+    activeClients30d,
+    businessesActive,
+    offersActive,
+    redemptions30d,
+    views30d,
+    cities,
+    portfolio,
+    portfolioSubs,
+    portfolioRedemptions,
+  ] = await Promise.all([
+    db.user.count({ where: { role: 'CLIENT' } }),
+    db.user.count({ where: { role: 'CLIENT', events: { some: { createdAt: { gte: since } } } } }),
+    db.business.count({ where: { status: 'ACTIVE' } }),
+    db.offer.count({ where: { status: 'ACTIVE' } }),
+    db.offerRedemption.count({ where: { createdAt: { gte: since } } }),
+    db.event.count({ where: { type: 'BUSINESS_VIEW', createdAt: { gte: since } } }),
+    db.business.findMany({ where: { status: 'ACTIVE' }, select: { region: true }, distinct: ['region'] }),
+    db.business.findMany({
+      where: mine,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        subscription: { select: { status: true, tier: true, trialEndsAt: true } },
+        _count: { select: { offers: true, reviews: true, favorites: true } },
+      },
+    }),
+    db.subscription.groupBy({
+      by: ['status'],
+      where: { business: mine },
+      _count: true,
+    }),
+    db.offerRedemption.count({ where: { offer: { business: mine } } }),
+  ])
+
+  const subMap = Object.fromEntries(portfolioSubs.map((r) => [r.status, r._count])) as Record<string, number>
+
+  return {
+    platform: {
+      clients,
+      activeClients30d,
+      businessesActive,
+      offersActive,
+      redemptions30d,
+      views30d,
+      regionsCovered: cities.filter((c) => c.region).length,
+    },
+    portfolio: {
+      total: portfolio.length,
+      live: portfolio.filter((b) => b.status === 'ACTIVE').length,
+      trialing: subMap.TRIALING ?? 0,
+      paying: subMap.ACTIVE ?? 0,
+      claimed: portfolio.filter((b) => b.claimedByOwnerAt).length,
+      redemptions: portfolioRedemptions,
+    },
+    businesses: portfolio,
+  }
+}
+
+/** Une fiche onboardée par ce commercial (accès lecture/gestion selon claim). */
+export async function getCommercialBusiness(businessId: string, commercialId: string) {
+  return db.business.findFirst({
+    where: { id: businessId, createdById: commercialId },
+    relationLoadStrategy: 'join',
+    include: {
+      owner: { select: { name: true, email: true, phone: true, mustChangePassword: true } },
+      subscription: true,
+      photos: { orderBy: { position: 'asc' } },
+      menuSections: { orderBy: { position: 'asc' }, include: { items: { orderBy: { position: 'asc' } } } },
+      offers: { orderBy: { createdAt: 'desc' }, include: { redemptions: { include: { user: { select: { name: true } } } } } },
+    },
+  })
+}
+
 export async function listUsersForAdmin(q?: string) {
   const term = q?.trim()
   return db.user.findMany({

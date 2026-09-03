@@ -4,7 +4,7 @@ import { revalidatePath, revalidateTag } from 'next/cache'
 import { TAG } from '@/lib/queries'
 import { z } from 'zod'
 import { db } from '@/lib/db'
-import { requireUser, getSessionUser } from '@/lib/session'
+import { requireUser, getSessionUser, getManageableBusiness } from '@/lib/session'
 import { guard } from '@/lib/rate-limit'
 
 // ------------------------------------------------------------------
@@ -84,12 +84,13 @@ export async function replyToReview(
   _prev: ReviewState,
   formData: FormData,
 ): Promise<ReviewState> {
-  const user = await requireUser(['MERCHANT'])
   const review = await db.review.findUnique({
     where: { id: reviewId },
-    include: { business: { select: { ownerId: true, slug: true } } },
+    include: { business: { select: { id: true, slug: true } } },
   })
-  if (!review || review.business.ownerId !== user.id) return { error: 'Avis introuvable.' }
+  if (!review) return { error: 'Avis introuvable.' }
+  const ctx = await getManageableBusiness(review.business.id)
+  if (!ctx) return { error: 'Avis introuvable.' }
 
   const reply = String(formData.get('reply') ?? '').trim()
   if (reply.length < 3) return { error: 'Réponse trop courte.' }

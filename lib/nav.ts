@@ -9,6 +9,7 @@ import {
   Star,
   Store,
   Ticket,
+  UserPlus,
   Users,
 } from 'lucide-react'
 import type { NavItem } from '@/components/app/app-shell'
@@ -16,6 +17,11 @@ import type { NavItem } from '@/components/app/app-shell'
 export const MERCHANT_NAV: NavItem[] = [
   { key: 'etablissements', label: 'Mes établissements', href: '/dashboard', icon: Store, section: 'Ma vitrine' },
   { key: 'sponsoring', label: 'Mise en avant', href: '/dashboard/espace-pub', icon: Megaphone, section: 'Croissance' },
+]
+
+export const COMMERCIAL_NAV: NavItem[] = [
+  { key: 'overview', label: 'Tableau de bord', href: '/commercial', icon: LayoutDashboard },
+  { key: 'onboard', label: 'Onboarder un lieu', href: '/commercial/nouveau', icon: UserPlus },
 ]
 
 type AdminCounts = { reviews: number; reports: number; messages: number }
