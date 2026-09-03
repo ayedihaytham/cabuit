@@ -2,6 +2,9 @@ import { redirect } from 'next/navigation'
 import type { Role } from '@prisma/client'
 import { auth } from '@/auth'
 import { db } from '@/lib/db'
+import { canManageBusiness } from '@/lib/access'
+
+export { canManageBusiness } from '@/lib/access'
 
 export type SessionUser = { id: string; name: string | null; email: string; role: Role }
 
@@ -61,16 +64,6 @@ export async function requireCommercial(): Promise<SessionUser> {
   if (user.role === 'MERCHANT') redirect('/dashboard')
   if (user.role !== 'COMMERCIAL') redirect('/')
   return user
-}
-
-type BusinessAccess = { ownerId: string; createdById: string | null; claimedByOwnerAt: Date | null }
-
-/** Peut éditer la fiche : le gérant, l'admin, ou le commercial qui l'a créée tant que le gérant n'a pas repris la main. */
-export function canManageBusiness(user: SessionUser, biz: BusinessAccess): boolean {
-  if (user.role === 'ADMIN') return true
-  if (biz.ownerId === user.id) return true
-  if (user.role === 'COMMERCIAL' && biz.createdById === user.id && !biz.claimedByOwnerAt) return true
-  return false
 }
 
 /**

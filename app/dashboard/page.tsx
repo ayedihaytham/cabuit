@@ -5,6 +5,8 @@ import { PageHead, EmptyState } from '@/components/app/ui'
 import { SideSummary } from '@/components/app/side-summary'
 import { requireMerchant } from '@/lib/session'
 import { getMerchantBusinesses } from '@/lib/queries'
+import { db } from '@/lib/db'
+import { VerifyEmailBanner } from '@/components/auth/verify-email-banner'
 import { BUSINESS_STATUS_LABELS, SUB_STATUS_LABELS, CATEGORY_LABELS } from '@/lib/status'
 import { MERCHANT_NAV } from '@/lib/nav'
 
@@ -16,7 +18,10 @@ export default async function DashboardPage({
   searchParams: Promise<{ submitted?: string }>
 }) {
   const user = await requireMerchant()
-  const businesses = await getMerchantBusinesses(user.id)
+  const [businesses, account] = await Promise.all([
+    getMerchantBusinesses(user.id),
+    db.user.findUnique({ where: { id: user.id }, select: { emailVerified: true } }),
+  ])
   const { submitted } = await searchParams
   const online = businesses.filter((b) => b.status === 'ACTIVE').length
 
@@ -44,6 +49,8 @@ export default async function DashboardPage({
           </Link>
         }
       />
+
+      {!account?.emailVerified && <VerifyEmailBanner />}
 
       {submitted && (
         <p className="mb-6 rounded-xl bg-olive/10 px-4 py-3 text-sm font-medium text-olive">

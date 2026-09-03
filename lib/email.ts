@@ -1,6 +1,17 @@
 import { BRAND } from '@/lib/constants'
+import { reportError } from '@/lib/observability'
 
 type Mail = { to: string; subject: string; html: string }
+
+/** À utiliser sur toute donnée saisie par un utilisateur avant interpolation dans un email HTML. */
+export function escapeHtml(input: string): string {
+  return input
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
 
 /**
  * Envoi d'email via Resend. Sans RESEND_API_KEY, log en console (repli dev)
@@ -21,8 +32,10 @@ export async function sendEmail({ to, subject, html }: Mail) {
       headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ from, to, subject, html }),
     })
+    if (!res.ok) reportError(new Error(`Resend ${res.status}`), { to, subject })
     return { ok: res.ok, delivered: res.ok }
-  } catch {
+  } catch (e) {
+    reportError(e, { scope: 'sendEmail', to, subject })
     return { ok: false, delivered: false }
   }
 }

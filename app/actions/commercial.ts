@@ -9,7 +9,7 @@ import { slugify } from '@/lib/slug'
 import { onboardSchema } from '@/lib/validations'
 import { getPlan, TRIAL_DAYS } from '@/lib/data/plans'
 import { TAG } from '@/lib/queries'
-import { sendEmail, layout, appUrl } from '@/lib/email'
+import { sendEmail, layout, appUrl, escapeHtml } from '@/lib/email'
 import { guard } from '@/lib/rate-limit'
 
 export type OnboardState = {
@@ -111,14 +111,16 @@ export async function onboardBusiness(_prev: OnboardState, formData: FormData): 
 
   await db.event.create({ data: { type: 'SIGNUP' } }).catch(() => {})
 
+  const safeName = escapeHtml(d.name)
+  const safeOwner = escapeHtml(d.ownerName)
   void sendEmail({
     to: d.ownerEmail,
     subject: `${d.name} est en ligne sur Winou`,
     html: layout(
-      `Bienvenue ${d.ownerName} 👋`,
-      `<p>Votre fiche <strong>${d.name}</strong> a été créée par notre équipe et elle est déjà visible sur Winou.</p>
+      `Bienvenue ${safeOwner} 👋`,
+      `<p>Votre fiche <strong>${safeName}</strong> a été créée par notre équipe et elle est déjà visible sur Winou.</p>
        <p>Connectez-vous pour la gérer :</p>
-       <p><strong>Identifiant :</strong> ${d.ownerEmail}<br/>
+       <p><strong>Identifiant :</strong> ${escapeHtml(d.ownerEmail)}<br/>
        <strong>Mot de passe temporaire :</strong> ${password}</p>
        <p>Il vous sera demandé de choisir un nouveau mot de passe à la première connexion.</p>`,
       { href: `${appUrl()}/connexion`, label: 'Accéder à mon espace' },

@@ -134,6 +134,11 @@ export async function claimOffer(
   const limited = await guard('claim', 20, 60 * 60 * 1000)
   if (limited) return limited
 
+  const account = await db.user.findUnique({ where: { id: user.id }, select: { emailVerified: true } })
+  if (!account?.emailVerified) {
+    return { error: 'Confirmez votre adresse email pour récupérer un bon plan (lien envoyé à l’inscription).' }
+  }
+
   const offer = await db.offer.findUnique({
     where: { id: offerId },
     include: { business: { select: { slug: true } } },

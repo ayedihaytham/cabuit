@@ -92,6 +92,12 @@ export async function updateBusiness(businessId: string, _prev: FormState, formD
  */
 export async function submitBusiness(businessId: string, _prev: FormState, formData: FormData): Promise<FormState> {
   const user = await requireUser(['MERCHANT'])
+
+  const account = await db.user.findUnique({ where: { id: user.id }, select: { emailVerified: true } })
+  if (!account?.emailVerified) {
+    return { error: 'Confirmez votre adresse email avant d’envoyer votre fiche à validation.' }
+  }
+
   const business = await db.business.findFirst({
     where: { id: businessId, ownerId: user.id },
     include: { subscription: true },

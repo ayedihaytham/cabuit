@@ -7,3 +7,4 @@ allowBuilds:
   msgpackr-extract: false
   msw: false
   workerd: false
+  '@sentry/cli': false

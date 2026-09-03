@@ -9,6 +9,8 @@ import { ClaimOffer } from '@/components/business/claim-offer'
 import { OfferCard } from '@/components/offers/offer-card'
 import { RegionPicker } from '@/components/region/region-picker'
 import { RegionPrompt } from '@/components/region/region-prompt'
+import { VerifyEmailBanner } from '@/components/auth/verify-email-banner'
+import { db } from '@/lib/db'
 import { requireUser } from '@/lib/session'
 import {
   getClientCounts,
@@ -36,7 +38,10 @@ export default async function EspaceClientPage({
   const displayName = user.name ?? user.email.split('@')[0]
 
   const region = await getPreferredRegion()
-  const { memberSince, counts } = await getClientCounts(user.id)
+  const [{ memberSince, counts }, account] = await Promise.all([
+    getClientCounts(user.id),
+    db.user.findUnique({ where: { id: user.id }, select: { emailVerified: true } }),
+  ])
 
   const nav: NavItem[] = [
     { key: 'bons-plans', label: 'Bons plans', href: '/espace-client?tab=bons-plans', icon: Ticket, badge: counts.offers, section: 'Mes avantages' },
@@ -67,6 +72,7 @@ export default async function EspaceClientPage({
         />
       }
     >
+      {!account?.emailVerified && <VerifyEmailBanner />}
       {active === 'bons-plans' && <OffersTab userId={user.id} firstName={displayName} />}
       {active === 'mes-bons-plans' && <MyOffersTab userId={user.id} />}
       {active === 'favoris' && <FavorisTab userId={user.id} />}

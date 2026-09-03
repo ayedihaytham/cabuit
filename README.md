@@ -44,6 +44,19 @@ pnpm dev                  # http://localhost:3100
 | `CRON_SECRET` | ⬜ | Protège `/api/cron/*` (Vercel l'injecte dans l'en-tête `Authorization`) |
 | `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` | ⬜ | Active « Continuer avec Google » |
 | `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` | ⬜ | Compte admin créé par `pnpm db:seed` |
+| `UPSTASH_REDIS_REST_URL` / `_TOKEN` | ⬜ prod | Rate-limiting distribué. Sans : repli en mémoire (mono-instance) |
+| `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN` | ⬜ prod | Monitoring d'erreurs. Sans : désactivé |
+
+---
+
+## Robustesse
+
+- **En-têtes de sécurité** (CSP, HSTS, X-Frame-Options, Permissions-Policy) : `next.config.mjs` → `headers()`.
+- **Rate-limiting** : `lib/rate-limit.ts` — Upstash Redis si configuré, sinon en mémoire. Sur Vercel (multi-lambda) : créer une base Upstash Redis (gratuit).
+- **Monitoring** : Sentry via `instrumentation.ts` (serveur/edge) + `instrumentation-client.ts` (navigateur). Inerte sans DSN. Pas d'upload de source maps (Turbopack) : ajouter `withSentryConfig` + `SENTRY_AUTH_TOKEN` plus tard si besoin.
+- **Vérification d'email** : à l'inscription, `emailVerified = null` + email avec lien `/verifier-email`. Bandeau de rappel dans les espaces client/commerçant ; `claimOffer` et `submitBusiness` sont bloqués tant que l'email n'est pas confirmé. Les comptes créés par un commercial ou le seed sont pré-vérifiés.
+- **Tests** : `pnpm test` (Vitest) — logique d'accès, régions, horaires, validations.
+- **CI** : `.github/workflows/ci.yml` — Postgres éphémère, `prisma migrate deploy`, lint + typecheck + test + build sur chaque push/PR.
 
 ---
 

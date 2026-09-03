@@ -3,7 +3,7 @@
 import { z } from 'zod'
 import { db } from '@/lib/db'
 import { guard } from '@/lib/rate-limit'
-import { sendEmail, layout } from '@/lib/email'
+import { sendEmail, layout, escapeHtml } from '@/lib/email'
 import { CONTACT_EMAIL } from '@/lib/constants'
 
 export type ContactState = { error?: string; ok?: boolean }
@@ -22,12 +22,17 @@ export async function sendContactMessage(_prev: ContactState, formData: FormData
     return { error: parsed.error.issues[0]?.message ?? 'Formulaire invalide.' }
   }
   await db.contactMessage.create({ data: parsed.data })
+  const safe = {
+    name: escapeHtml(parsed.data.name),
+    email: escapeHtml(parsed.data.email),
+    message: escapeHtml(parsed.data.message).replace(/\n/g, '<br/>'),
+  }
   void sendEmail({
     to: CONTACT_EMAIL,
-    subject: `Nouveau message — ${parsed.data.name}`,
+    subject: `Nouveau message — ${safe.name}`,
     html: layout(
       'Message de contact',
-      `<p><strong>${parsed.data.name}</strong> (${parsed.data.email})</p><p>${parsed.data.message}</p>`,
+      `<p><strong>${safe.name}</strong> (${safe.email})</p><p>${safe.message}</p>`,
     ),
   })
   return { ok: true }

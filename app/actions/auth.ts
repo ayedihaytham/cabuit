@@ -5,8 +5,9 @@ import bcrypt from 'bcryptjs'
 import { signIn } from '@/auth'
 import { db } from '@/lib/db'
 import { signupClientSchema } from '@/lib/validations'
-import { sendEmail, layout, appUrl } from '@/lib/email'
+import { sendEmail, layout, appUrl, escapeHtml } from '@/lib/email'
 import { guard } from '@/lib/rate-limit'
+import { createEmailVerifyToken } from '@/lib/tokens'
 
 export type SignupState = { error?: string; fieldErrors?: Record<string, string[]> }
 
@@ -35,23 +36,28 @@ async function createAccount(
       email,
       role,
       passwordHash: await bcrypt.hash(password, 10),
-      emailVerified: new Date(), // TODO: vérification par email (Phase emails)
+      emailVerified: null,
     },
   })
 
   await db.event.create({ data: { type: 'SIGNUP' } }).catch(() => {})
 
+  const verifyToken = await createEmailVerifyToken(email)
+  const verifyLink = `${appUrl()}/verifier-email?token=${verifyToken}`
   void sendEmail({
     to: email,
-    subject: `Bienvenue sur Winou${role === 'MERCHANT' ? ' — inscrivez votre établissement' : ''} !`,
+    subject: 'Confirmez votre adresse email — Winou',
     html: layout(
-      `Bienvenue ${name} 👋`,
-      role === 'MERCHANT'
-        ? `<p>Votre compte commerçant est créé. Ajoutez votre restaurant ou café,
-           choisissez une offre et envoyez la fiche à validation.</p>`
-        : `<p>Votre compte est créé. Récupérez des bons plans, gardez vos adresses
-           favorites et présentez votre code au comptoir.</p>`,
-      { href: `${appUrl()}${redirectTo}`, label: 'Commencer' },
+      `Bienvenue ${escapeHtml(name)} 👋`,
+      `<p>${
+        role === 'MERCHANT'
+          ? 'Votre compte commerçant est créé.'
+          : 'Votre compte est créé.'
+      } Confirmez votre adresse email pour ${
+        role === 'MERCHANT' ? 'publier votre fiche' : 'récupérer des bons plans'
+      }.</p>
+       <p style="color:#9a8f82">Ce lien est valable 24 heures.</p>`,
+      { href: verifyLink, label: 'Confirmer mon email' },
     ),
   })
 

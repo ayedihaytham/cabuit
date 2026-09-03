@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 import Link from 'next/link'
+import * as Sentry from '@sentry/nextjs'
 import { ArrowLeft, RotateCw, TriangleAlert } from 'lucide-react'
 
 export default function Error({
@@ -12,6 +13,7 @@ export default function Error({
   reset: () => void
 }) {
   useEffect(() => {
+    Sentry.captureException(error)
     console.error(error)
   }, [error])
 
