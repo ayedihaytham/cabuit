@@ -8,6 +8,7 @@ import { requireCommercial, requireMerchant } from '@/lib/session'
 import { slugify } from '@/lib/slug'
 import { onboardSchema } from '@/lib/validations'
 import { getPlan, TRIAL_DAYS } from '@/lib/data/plans'
+import { CGA_VERSION } from '@/lib/legal'
 import { TAG } from '@/lib/queries'
 import { sendEmail, layout, appUrl, escapeHtml } from '@/lib/email'
 import { notify } from '@/lib/notifications'
@@ -99,7 +100,7 @@ export async function onboardBusiness(_prev: OnboardState, formData: FormData): 
         trialEndsAt: trialEnd,
         acceptedTermsAt: new Date(),
         acceptedTermsIp: `onboarding-commercial:${commercial.id}`,
-        contractVersion: 'v1',
+        contractVersion: CGA_VERSION,
       },
     })
 

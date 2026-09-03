@@ -8,6 +8,7 @@ import { requireUser, getManageableBusiness } from '@/lib/session'
 import { slugify } from '@/lib/slug'
 import { businessSchema, submitSchema } from '@/lib/validations'
 import { PLANS } from '@/lib/data/plans'
+import { CGA_VERSION } from '@/lib/legal'
 import { TAG } from '@/lib/queries'
 
 export type FormState = { error?: string; fieldErrors?: Record<string, string[]>; ok?: boolean }
@@ -141,7 +142,7 @@ export async function submitBusiness(businessId: string, _prev: FormState, formD
         trialEndsAt: trialEnd,
         acceptedTermsAt: new Date(),
         acceptedTermsIp: ip,
-        contractVersion: 'v1',
+        contractVersion: CGA_VERSION,
       },
     }),
     db.business.update({ where: { id: businessId }, data: { status: 'PENDING' } }),

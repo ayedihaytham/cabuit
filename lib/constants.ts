@@ -5,13 +5,8 @@ export const TAGLINE = 'Les bonnes adresses près de chez toi'
 export const CONTACT_EMAIL = 'bonjour@winou.tn'
 export const INSTAGRAM_URL = 'https://instagram.com/winou.tn'
 
-/** Coordonnées de règlement par virement. TODO(finance) : valeurs réelles. */
-export const BANK_DETAILS = {
-  holder: 'Winou SARL',
-  bank: 'À compléter',
-  rib: '00 000 0000000000000 00',
-  iban: 'TN00 0000 0000 0000 0000 0000',
-}
+/** Coordonnées bancaires — définies dans lib/legal.ts (source unique). */
+export { BANK_DETAILS } from '@/lib/legal'
 
 /** Winou regroupe uniquement des restaurants et des cafés / salons de thé. */
 export const CATEGORIES: Category[] = ['Restauration', 'Cafés & salons de thé']

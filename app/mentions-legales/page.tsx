@@ -1,38 +1,63 @@
 import { LegalPage, legalMetadata } from '@/components/layout/legal-page'
-import { BRAND, CONTACT_EMAIL } from '@/lib/constants'
+import { BRAND } from '@/lib/constants'
+import { COMPANY, LEGAL_UPDATED } from '@/lib/legal'
 
 export const metadata = legalMetadata('Mentions légales')
 
 export default function MentionsLegalesPage() {
   return (
-    <LegalPage title="Mentions légales" updated="1er septembre 2026">
-      <h2>Éditeur</h2>
+    <LegalPage title="Mentions légales" updated={LEGAL_UPDATED}>
+      <h2>Éditeur du site</h2>
       <p>
-        {BRAND} — plateforme de mise en relation entre les restaurants, cafés et salons de thé de
-        Tunisie et leurs clients.
+        <strong>{COMPANY.legalName}</strong> ({COMPANY.legalForm})
+        {COMPANY.capital ? ` — capital ${COMPANY.capital}` : ''}
         <br />
-        Contact : <a href={`mailto:${CONTACT_EMAIL}`} className="text-terracotta">{CONTACT_EMAIL}</a>
+        Siège social : {COMPANY.address}
         <br />
-        {/* TODO(légal) : raison sociale, matricule fiscal, adresse du siège, responsable de publication. */}
-        <strong>Informations légales complètes à compléter</strong> (raison sociale, matricule
-        fiscal, adresse du siège, responsable de la publication).
+        Matricule fiscal : {COMPANY.taxId}
+        <br />
+        Registre national des entreprises : {COMPANY.rne}
+        <br />
+        Email :{' '}
+        <a href={`mailto:${COMPANY.email}`} className="text-terracotta">
+          {COMPANY.email}
+        </a>
+        {COMPANY.phone ? <> · Téléphone : {COMPANY.phone}</> : null}
+      </p>
+
+      <h2>Responsable de la publication</h2>
+      <p>{COMPANY.publisher}</p>
+
+      <h2>Nature du service</h2>
+      <p>
+        {BRAND} est une plateforme de mise en relation entre les restaurants, cafés et salons de thé
+        de Tunisie et leurs clients. {BRAND} n’est pas partie aux prestations fournies par les
+        établissements référencés.
       </p>
 
       <h2>Hébergement</h2>
       <p>
-        Le site est hébergé par Vercel Inc. et la base de données par Neon. {/* TODO: adresses */}
+        Application : Vercel Inc., 340 S Lemon Ave #4133, Walnut, CA 91789, États-Unis
+        (vercel.com).
+        <br />
+        Base de données : Neon Inc. (neon.tech).
       </p>
 
       <h2>Propriété intellectuelle</h2>
       <p>
         La marque {BRAND}, le logo et l’interface sont protégés. Les contenus des fiches (textes,
-        photos) restent la propriété des établissements qui les publient.
+        photos) restent la propriété des établissements qui les publient et sont diffusés sous leur
+        responsabilité.
       </p>
 
-      <h2>Signalement</h2>
+      <h2>Signalement de contenu</h2>
       <p>
         Tout contenu illicite peut être signalé via le bouton « Signaler cette fiche » présent sur
-        chaque page d’établissement, ou par email.
+        chaque page d’établissement, ou par email à{' '}
+        <a href={`mailto:${COMPANY.email}`} className="text-terracotta">
+          {COMPANY.email}
+        </a>
+        .
       </p>
     </LegalPage>
   )
