@@ -32,6 +32,7 @@ const securityHeaders = [
 
 const nextConfig = {
   reactStrictMode: true,
+  poweredByHeader: false,
   // Masque le bouton indicateur Next.js (le rond "N") affiché en dev uniquement.
   devIndicators: false,
   // Fichiers AGENTS.md / CLAUDE.md régénérés à chaque `next dev` : on les désactive.

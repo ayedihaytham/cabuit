@@ -1,9 +1,7 @@
 import {
-  CalendarDays,
   Flag,
   LayoutDashboard,
   Mail,
-  Megaphone,
   ScrollText,
   Settings,
   ShieldCheck,
@@ -17,9 +15,8 @@ import {
 import type { NavItem } from '@/components/app/app-shell'
 
 export const MERCHANT_NAV: NavItem[] = [
-  { key: 'etablissements', label: 'Mes établissements', href: '/dashboard', icon: Store, section: 'Ma vitrine' },
-  { key: 'sponsoring', label: 'Mise en avant', href: '/dashboard/espace-pub', icon: Megaphone, section: 'Croissance' },
-  { key: 'compte', label: 'Mon compte', href: '/compte', icon: Settings, section: 'Croissance' },
+  { key: 'etablissements', label: 'Mes établissements', href: '/dashboard', icon: Store },
+  { key: 'compte', label: 'Mon compte', href: '/compte', icon: Settings },
 ]
 
 export const COMMERCIAL_NAV: NavItem[] = [
@@ -43,7 +40,6 @@ export function adminNav(
     { key: 'reports', label: 'Signalements', href: '/admin?tab=reports', icon: Flag, badge: counts.reports, section: 'Communauté' },
     { key: 'messages', label: 'Messages', href: '/admin?tab=messages', icon: Mail, badge: counts.messages, section: 'Communauté' },
     { key: 'analytics', label: 'Analytics', href: '/admin/analytics', icon: TrendingUp, section: 'Plateforme' },
-    { key: 'ads', label: 'Espaces sponsorisés', href: '/admin/espaces-pub', icon: CalendarDays, section: 'Plateforme' },
     { key: 'journal', label: 'Journal', href: '/admin/journal', icon: ScrollText, section: 'Plateforme' },
   ]
 }

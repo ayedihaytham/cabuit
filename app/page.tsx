@@ -6,7 +6,6 @@ import { SiteHeader } from '@/components/layout/site-header'
 import { SiteFooter } from '@/components/layout/site-footer'
 import { HeroSearch } from '@/components/home/hero-search'
 import { FavoriteButton } from '@/components/home/favorite-button'
-import { SponsoredPlacement } from '@/components/sponsored-card'
 import { OfferCard } from '@/components/offers/offer-card'
 import { RegionPicker } from '@/components/region/region-picker'
 import { listActiveBusinesses, listActiveOffers } from '@/lib/queries'
@@ -161,8 +160,6 @@ export default async function HomePage() {
           </div>
         </section>
       )}
-
-      <SponsoredPlacement />
 
       <section id="selection" className="mx-auto max-w-7xl px-5 py-16 lg:px-8 lg:py-20">
         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">

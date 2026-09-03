@@ -1,5 +1,3 @@
-import type { Category } from '@/lib/types'
-
 export const BRAND = 'Winou'
 export const TAGLINE = 'Les bonnes adresses près de chez toi'
 export const CONTACT_EMAIL = 'bonjour@winou.tn'
@@ -7,20 +5,6 @@ export const INSTAGRAM_URL = 'https://instagram.com/winou.tn'
 
 /** Coordonnées bancaires — définies dans lib/legal.ts (source unique). */
 export { BANK_DETAILS } from '@/lib/legal'
-
-/** Winou regroupe uniquement des restaurants et des cafés / salons de thé. */
-export const CATEGORIES: Category[] = ['Restauration', 'Cafés & salons de thé']
-
-export const CITIES = [
-  'Tunis Centre',
-  'La Marsa',
-  'Carthage',
-  'Sidi Bou Saïd',
-  'Les Berges du Lac',
-  'Ariana',
-] as const
-
-export const SORT_OPTIONS = ['Pertinence', 'Proximité', 'Nouveauté', 'Note'] as const
 
 export const FOOTER_LINKS = [
   { label: 'Se connecter', href: '/connexion-client' },

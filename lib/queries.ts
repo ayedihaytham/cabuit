@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { unstable_cache } from 'next/cache'
 import type { BusinessStatus, Category } from '@prisma/client'
 import { db } from '@/lib/db'
@@ -54,15 +55,23 @@ type SearchOpts = {
   query?: string
   category?: Category
   region?: string
-  city?: string
   verifiedOnly?: boolean
   sort?: BusinessSort
   page?: number
 }
 
-/** Recherche paginée côté serveur — remplace le filtrage en mémoire. */
-export async function searchBusinesses(opts: SearchOpts) {
-  const { query, category, region, city, verifiedOnly, sort = 'pertinence' } = opts
+/**
+ * Recherche paginée côté serveur, mise en cache 60 s par combinaison de filtres
+ * (invalidée dès qu'un commerce change via revalidateTag). Amortit la charge DB
+ * sous fort trafic.
+ */
+export const searchBusinesses = unstable_cache(_searchBusinesses, ['search-businesses'], {
+  revalidate: 60,
+  tags: [TAG.businesses],
+})
+
+async function _searchBusinesses(opts: SearchOpts) {
+  const { query, category, region, verifiedOnly, sort = 'pertinence' } = opts
   const page = Math.max(1, opts.page ?? 1)
   const term = query?.trim()
 
@@ -70,7 +79,6 @@ export async function searchBusinesses(opts: SearchOpts) {
     status: 'ACTIVE' as const,
     ...(category ? { category } : {}),
     ...(region ? { region } : {}),
-    ...(city ? { city } : {}),
     ...(verifiedOnly ? { verified: true } : {}),
     ...(term
       ? {
@@ -114,7 +122,12 @@ export async function listBusinessSlugs() {
   })
 }
 
-export async function getPublicBusiness(slug: string) {
+/**
+ * Fiche publique. `cache()` (mémoïsation par requête) : `generateMetadata` et le
+ * composant de page partagent la même requête. Pas de `unstable_cache` ici — le
+ * retour contient des dates imbriquées que la sérialisation du cache altérerait.
+ */
+export const getPublicBusiness = cache(async (slug: string) => {
   return db.business.findFirst({
     where: { slug, status: 'ACTIVE' },
     relationLoadStrategy: 'join',
@@ -132,7 +145,7 @@ export async function getPublicBusiness(slug: string) {
       },
     },
   })
-}
+})
 
 // ------------------------------------------------------------------
 // Bons plans

@@ -63,7 +63,9 @@ export function OfferCard({
           {validUntil && (
             <span>
               Jusqu’au{' '}
-              {new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(validUntil)}
+              {new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(
+                new Date(validUntil),
+              )}
             </span>
           )}
         </div>

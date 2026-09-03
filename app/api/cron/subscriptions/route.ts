@@ -33,9 +33,21 @@ export async function GET(request: Request) {
   }
 
   const now = new Date()
-  const result = { expiredTrials: 0, trialSuspended: 0, renewalReminders: 0, lapsed: 0, renewalSuspended: 0 }
+  const result = {
+    expiredTrials: 0,
+    trialSuspended: 0,
+    renewalReminders: 0,
+    lapsed: 0,
+    renewalSuspended: 0,
+    eventsPruned: 0,
+  }
 
   try {
+    // 0. Purge des événements d'audience de plus de 120 jours (borne la table).
+    const pruned = await db.event.deleteMany({
+      where: { createdAt: { lt: new Date(now.getTime() - 120 * day) } },
+    })
+    result.eventsPruned = pruned.count
     // 1. Fin d'essai -> à régler
     const expiredTrials = await db.subscription.findMany({
       where: { status: 'TRIALING', trialEndsAt: { lt: now } },

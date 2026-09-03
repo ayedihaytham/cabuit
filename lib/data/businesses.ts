@@ -1,10 +1,6 @@
-import type { Business, Category } from '@/lib/types'
-import { SORT_OPTIONS } from '@/lib/constants'
+import type { Business } from '@/lib/types'
 
-/**
- * Source unique des commerces référencés (données de démonstration).
- * Chaque page qui affiche des adresses lit ce tableau — ne pas dupliquer ailleurs.
- */
+/** Jeu de données de démonstration — utilisé uniquement par prisma/seed.ts. */
 export const BUSINESSES: Business[] = [
   {
     slug: 'le-petit-souk',
@@ -154,47 +150,3 @@ export const BUSINESSES: Business[] = [
   },
 ]
 
-export function getBusiness(slug: string): Business | undefined {
-  return BUSINESSES.find((business) => business.slug === slug)
-}
-
-export function getBusinessesByCategory(category: Category): Business[] {
-  return BUSINESSES.filter((business) => business.category === category)
-}
-
-type FilterOptions = {
-  query?: string
-  category?: Category | 'all'
-  city?: string | 'all'
-  verifiedOnly?: boolean
-  sort?: (typeof SORT_OPTIONS)[number]
-}
-
-export function filterBusinesses({
-  query = '',
-  category = 'all',
-  city = 'all',
-  verifiedOnly = false,
-  sort = 'Pertinence',
-}: FilterOptions): Business[] {
-  const term = query.trim().toLowerCase()
-
-  const filtered = BUSINESSES.filter((business) => {
-    const matchesTerm =
-      !term ||
-      [business.name, business.category, business.type, business.city].some((value) =>
-        value.toLowerCase().includes(term),
-      )
-    const matchesCategory = category === 'all' || business.category === category
-    const matchesCity = city === 'all' || business.city === city
-    const matchesVerified = !verifiedOnly || business.verified
-    return matchesTerm && matchesCategory && matchesCity && matchesVerified
-  })
-
-  if (sort === 'Note') return [...filtered].sort((a, b) => b.rating - a.rating)
-  if (sort === 'Nouveauté') return [...filtered].reverse()
-  if (sort === 'Proximité') {
-    return [...filtered].sort((a, b) => a.city.localeCompare(b.city))
-  }
-  return filtered
-}

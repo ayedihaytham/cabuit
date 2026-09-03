@@ -34,7 +34,6 @@ export default async function RestaurationPage({ searchParams }: { searchParams:
     query: sp.q,
     category: 'RESTAURANT',
     region,
-    city: sp.ville || undefined,
     verifiedOnly: sp.verifie === '1',
     sort,
     page,

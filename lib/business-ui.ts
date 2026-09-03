@@ -25,7 +25,3 @@ export function toUiBusiness(row: DbBusiness & { photos?: BusinessPhoto[] }): Ui
     instagram: row.instagram ?? undefined,
   }
 }
-
-export function uiToDbCategory(category: UiCategory): DbCategory {
-  return category === 'Restauration' ? 'RESTAURANT' : 'CAFE'
-}

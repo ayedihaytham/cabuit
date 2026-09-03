@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { Filter, Search, SlidersHorizontal, X } from 'lucide-react'
-import { CITIES } from '@/lib/constants'
 import { GOVERNORATES } from '@/lib/regions'
 
 const SORTS = [
@@ -86,12 +85,6 @@ export function DirectoryFilters({ lockCategory = false }: { lockCategory?: bool
           <option value="">Tous gouvernorats</option>
           {GOVERNORATES.map((g) => (
             <option key={g.key} value={g.key}>{g.label}</option>
-          ))}
-        </select>
-        <select className={sel} value={params.get('ville') ?? ''} onChange={(e) => update('ville', e.target.value || null)}>
-          <option value="">Toutes zones</option>
-          {CITIES.map((c) => (
-            <option key={c} value={c}>{c}</option>
           ))}
         </select>
         <select className={sel} value={params.get('tri') ?? 'pertinence'} onChange={(e) => update('tri', e.target.value === 'pertinence' ? null : e.target.value)}>

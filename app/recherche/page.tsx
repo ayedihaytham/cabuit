@@ -35,7 +35,6 @@ export default async function RecherchePage({ searchParams }: { searchParams: Pr
     query: sp.q,
     category,
     region,
-    city: sp.ville || undefined,
     verifiedOnly: sp.verifie === '1',
     sort,
     page,
@@ -85,7 +84,6 @@ export default async function RecherchePage({ searchParams }: { searchParams: Pr
                 q: sp.q,
                 category: sp.category,
                 region: sp.region,
-                ville: sp.ville,
                 verifie: sp.verifie,
                 tri: sp.tri,
               }}
